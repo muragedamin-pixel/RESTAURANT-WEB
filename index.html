@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DAMINEEMA RESTAURANT</title>
+  <link rel="stylesheet" href="restaurant.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Cinzel:wght@400;700&family=Lato:wght@300;400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- SPLASH SCREEN -->
+  <div class="splash" id="splash">
+    <div class="splash-inner">
+      <div class="splash-ornament">✦</div>
+      <h1 class="splash-name">DAMINEEMA</h1>
+      <p class="splash-sub">RESTAURANT & HOTEL</p>
+      <div class="splash-divider"></div>
+      <p class="splash-tagline">Where Every Meal Tells a Story</p>
+      <button class="splash-btn" id="splash-btn">Enter ›</button>
+    </div>
+  </div>
+
+  <!-- MAIN SITE -->
+  <div class="site" id="site">
+
+    <!-- NAV -->
+    <nav id="navbar">
+      <div class="nav-logo">DAMINEEMA</div>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#menu">Menu</a></li>
+        <li><a href="#order">Order</a></li>
+        <li><a href="#bookings">Bookings</a></li>
+        <li><a href="#rooms">Rooms</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="nav-actions">
+        <div class="cart-icon" id="cart-icon">🛒 <span class="cart-count" id="cart-count">0</span></div>
+      </div>
+      <div class="hamburger" id="hamburger">&#9776;</div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <p class="hero-label">Est. 2024 — Nairobi, Kenya</p>
+        <h1>A Grand Dining<br/><span>Experience</span></h1>
+        <p class="hero-desc">Authentic Kenyan cuisine meets continental elegance. Reserve your table, order your meal, or book a luxurious stay.</p>
+        <div class="hero-btns">
+          <a href="#menu" class="btn-primary">View Menu</a>
+          <a href="#bookings" class="btn-ghost">Book a Table</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee-bar">
+      <div class="marquee-track">
+        <span>KENYAN CUISINE &nbsp;✦&nbsp; CONTINENTAL DISHES &nbsp;✦&nbsp; FINE DINING &nbsp;✦&nbsp; ROOM BOOKINGS &nbsp;✦&nbsp; TABLE RESERVATIONS &nbsp;✦&nbsp; EVENTS &nbsp;✦&nbsp; KENYAN CUISINE &nbsp;✦&nbsp; CONTINENTAL DISHES &nbsp;✦&nbsp; FINE DINING &nbsp;✦&nbsp; ROOM BOOKINGS &nbsp;✦&nbsp; TABLE RESERVATIONS &nbsp;✦&nbsp; EVENTS &nbsp;✦&nbsp;</span>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <section class="menu-section" id="menu">
+      <div class="section-header">
+        <p class="section-label">Our Offerings</p>
+        <h2>The Menu</h2>
+        <div class="menu-tabs">
+          <button class="mtab active" data-cat="kenyan">Kenyan</button>
+          <button class="mtab" data-cat="continental">Continental</button>
+          <button class="mtab" data-cat="drinks">Drinks</button>
+          <button class="mtab" data-cat="desserts">Desserts</button>
+        </div>
+      </div>
+      <div class="menu-grid" id="menu-grid">
+
+        <!-- KENYAN -->
+        <div class="menu-card" data-cat="kenyan">
+          <div class="menu-emoji">🍖</div>
+          <div class="menu-info">
+            <h4>Nyama Choma</h4>
+            <p>Slow-roasted seasoned beef, served with kachumbari & ugali</p>
+            <strong>Ksh 850</strong>
+          </div>
+          <button class="add-order" data-name="Nyama Choma" data-price="850">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="kenyan">
+          <div class="menu-emoji">🍛</div>
+          <div class="menu-info">
+            <h4>Pilau wa Nyumbani</h4>
+            <p>Fragrant spiced rice with tender beef, Kenyan style</p>
+            <strong>Ksh 550</strong>
+          </div>
+          <button class="add-order" data-name="Pilau wa Nyumbani" data-price="550">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="kenyan">
+          <div class="menu-emoji">🥘</div>
+          <div class="menu-info">
+            <h4>Githeri Special</h4>
+            <p>Traditional maize & beans stew with a chef's twist</p>
+            <strong>Ksh 350</strong>
+          </div>
+          <button class="add-order" data-name="Githeri Special" data-price="350">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="kenyan">
+          <div class="menu-emoji">🐟</div>
+          <div class="menu-info">
+            <h4>Tilapia ya Pwani</h4>
+            <p>Whole tilapia, coastal spiced & deep fried, with rice</p>
+            <strong>Ksh 750</strong>
+          </div>
+          <button class="add-order" data-name="Tilapia ya Pwani" data-price="750">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="kenyan">
+          <div class="menu-emoji">🫕</div>
+          <div class="menu-info">
+            <h4>Mukimo & Stew</h4>
+            <p>Mashed potato, peas & greens with rich beef stew</p>
+            <strong>Ksh 450</strong>
+          </div>
+          <button class="add-order" data-name="Mukimo & Stew" data-price="450">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="kenyan">
+          <div class="menu-emoji">🍗</div>
+          <div class="menu-info">
+            <h4>Kuku Kienyeji</h4>
+            <p>Free-range chicken stew with traditional herbs & ugali</p>
+            <strong>Ksh 700</strong>
+          </div>
+          <button class="add-order" data-name="Kuku Kienyeji" data-price="700">+ Add</button>
+        </div>
+
+        <!-- CONTINENTAL -->
+        <div class="menu-card" data-cat="continental">
+          <div class="menu-emoji">🥩</div>
+          <div class="menu-info">
+            <h4>Grilled Sirloin Steak</h4>
+            <p>250g sirloin, garlic butter, mashed potato & greens</p>
+            <strong>Ksh 1,800</strong>
+          </div>
+          <button class="add-order" data-name="Grilled Sirloin Steak" data-price="1800">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="continental">
+          <div class="menu-emoji">🍝</div>
+          <div class="menu-info">
+            <h4>Pasta Carbonara</h4>
+            <p>Creamy egg-based pasta with pancetta & parmesan</p>
+            <strong>Ksh 950</strong>
+          </div>
+          <button class="add-order" data-name="Pasta Carbonara" data-price="950">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="continental">
+          <div class="menu-emoji">🍣</div>
+          <div class="menu-info">
+            <h4>Salmon Fillet</h4>
+            <p>Pan-seared salmon, lemon butter sauce, steamed veg</p>
+            <strong>Ksh 1,600</strong>
+          </div>
+          <button class="add-order" data-name="Salmon Fillet" data-price="1600">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="continental">
+          <div class="menu-emoji">🥗</div>
+          <div class="menu-info">
+            <h4>Caesar Salad</h4>
+            <p>Romaine, croutons, parmesan, house-made caesar dressing</p>
+            <strong>Ksh 650</strong>
+          </div>
+          <button class="add-order" data-name="Caesar Salad" data-price="650">+ Add</button>
+        </div>
+
+        <!-- DRINKS -->
+        <div class="menu-card" data-cat="drinks">
+          <div class="menu-emoji">🍹</div>
+          <div class="menu-info">
+            <h4>Passion Juice</h4>
+            <p>Fresh-squeezed passion fruit, chilled</p>
+            <strong>Ksh 200</strong>
+          </div>
+          <button class="add-order" data-name="Passion Juice" data-price="200">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="drinks">
+          <div class="menu-emoji">☕</div>
+          <div class="menu-info">
+            <h4>Kenyan AA Coffee</h4>
+            <p>Premium AA grade coffee, black or with milk</p>
+            <strong>Ksh 250</strong>
+          </div>
+          <button class="add-order" data-name="Kenyan AA Coffee" data-price="250">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="drinks">
+          <div class="menu-emoji">🧃</div>
+          <div class="menu-info">
+            <h4>Dawa Cocktail</h4>
+            <p>Kenyan classic — vodka, honey, lime & ginger</p>
+            <strong>Ksh 600</strong>
+          </div>
+          <button class="add-order" data-name="Dawa Cocktail" data-price="600">+ Add</button>
+        </div>
+
+        <!-- DESSERTS -->
+        <div class="menu-card" data-cat="desserts">
+          <div class="menu-emoji">🍮</div>
+          <div class="menu-info">
+            <h4>Maandazi Dessert</h4>
+            <p>Warm spiced maandazi with honey & coconut cream</p>
+            <strong>Ksh 300</strong>
+          </div>
+          <button class="add-order" data-name="Maandazi Dessert" data-price="300">+ Add</button>
+        </div>
+        <div class="menu-card" data-cat="desserts">
+          <div class="menu-emoji">🍰</div>
+          <div class="menu-info">
+            <h4>Chocolate Lava Cake</h4>
+            <p>Warm chocolate cake with molten centre & vanilla ice cream</p>
+            <strong>Ksh 550</strong>
+          </div>
+          <button class="add-order" data-name="Chocolate Lava Cake" data-price="550">+ Add</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ORDER CART -->
+    <section class="order-section" id="order">
+      <div class="section-header">
+        <p class="section-label">Your Selection</p>
+        <h2>Your Order</h2>
+      </div>
+      <div class="order-box">
+        <div class="order-items" id="order-items"><p class="empty-msg">No items yet. Add from the menu above.</p></div>
+        <div class="order-footer" id="order-footer" style="display:none">
+          <div class="order-total">Total: <strong id="order-total">Ksh 0</strong></div>
+          <div class="order-note">
+            <label>Special instructions</label>
+            <textarea id="order-note" placeholder="Allergies, preferences, table number..."></textarea>
+          </div>
+          <button class="btn-primary" style="width:100%" onclick="placeOrder()">Place Order</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOOKINGS -->
+    <section class="bookings-section" id="bookings">
+      <div class="section-header">
+        <p class="section-label">Reserve Your Spot</p>
+        <h2>Table Booking</h2>
+      </div>
+      <form class="booking-form" id="table-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" placeholder="Your name" required />
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" placeholder="07XX XXX XXX" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" required />
+          </div>
+          <div class="form-group">
+            <label>Time</label>
+            <input type="time" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Number of Guests</label>
+            <select required>
+              <option value="">Select guests</option>
+              <option>1</option><option>2</option><option>3</option>
+              <option>4</option><option>5</option><option>6+</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Seating Preference</label>
+            <select>
+              <option>Indoor</option>
+              <option>Outdoor / Terrace</option>
+              <option>Private Dining</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">Reserve Table</button>
+        <p class="form-success" id="table-success"></p>
+      </form>
+    </section>
+
+    <!-- ROOMS -->
+    <section class="rooms-section" id="rooms">
+      <div class="section-header">
+        <p class="section-label">Stay With Us</p>
+        <h2>Our Rooms</h2>
+      </div>
+      <div class="rooms-grid">
+        <div class="room-card">
+          <div class="room-img">🛏️</div>
+          <div class="room-info">
+            <h3>Standard Room</h3>
+            <p>Comfortable room with en-suite, AC, WiFi & breakfast included</p>
+            <strong>Ksh 5,500 / night</strong>
+            <button class="btn-primary" onclick="openRoomBook('Standard Room', 5500)">Book Room</button>
+          </div>
+        </div>
+        <div class="room-card featured-room">
+          <div class="room-badge">Popular</div>
+          <div class="room-img">🛎️</div>
+          <div class="room-info">
+            <h3>Deluxe Suite</h3>
+            <p>Spacious suite with king bed, lounge area, minibar & city view</p>
+            <strong>Ksh 9,800 / night</strong>
+            <button class="btn-primary" onclick="openRoomBook('Deluxe Suite', 9800)">Book Room</button>
+          </div>
+        </div>
+        <div class="room-card">
+          <div class="room-img">👑</div>
+          <div class="room-info">
+            <h3>Presidential Suite</h3>
+            <p>The ultimate luxury — private terrace, butler service & jacuzzi</p>
+            <strong>Ksh 22,000 / night</strong>
+            <button class="btn-primary" onclick="openRoomBook('Presidential Suite', 22000)">Book Room</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="about-section" id="about">
+      <div class="about-text">
+        <p class="section-label">Our Story</p>
+        <h2>The DAMINEEMA Experience</h2>
+        <p>Nestled in the heart of Nairobi, DAMINEEMA RESTAURANT & HOTEL is where authentic Kenyan heritage meets world-class hospitality. We pride ourselves on using locally sourced ingredients, traditional cooking methods, and a warm, welcoming atmosphere that makes every guest feel at home — whether you're dining in for the evening or staying for the week.</p>
+        <ul class="about-pillars">
+          <li>✦ Locally Sourced Kenyan Ingredients</li>
+          <li>✦ Award-Winning Chefs</li>
+          <li>✦ 24/7 Concierge & Room Service</li>
+          <li>✦ Private Event & Conference Facilities</li>
+        </ul>
+      </div>
+      <div class="about-stats">
+        <div class="stat"><h3>12+</h3><p>Years of Excellence</p></div>
+        <div class="stat"><h3>50+</h3><p>Menu Items</p></div>
+        <div class="stat"><h3>30</h3><p>Hotel Rooms</p></div>
+        <div class="stat"><h3>5★</h3><p>Guest Rating</p></div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact-section" id="contact">
+      <div class="section-header">
+        <p class="section-label">Get In Touch</p>
+        <h2>Find Us</h2>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-item">📍<div><h4>Location</h4><p>Kimathi Street, Nairobi CBD, Kenya</p></div></div>
+        <div class="contact-item">📞<div><h4>Phone</h4><p>+254 700 000 000</p></div></div>
+        <div class="contact-item">✉️<div><h4>Email</h4><p>info@damineema.co.ke</p></div></div>
+        <div class="contact-item">🕐<div><h4>Hours</h4><p>Mon–Sun: 7:00 AM – 11:00 PM</p></div></div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-grid">
+        <div><h3>DAMINEEMA</h3><p>Restaurant & Hotel<br/>Nairobi, Kenya</p></div>
+        <div><h4>Explore</h4><ul><li><a href="#menu">Menu</a></li><li><a href="#order">Order</a></li><li><a href="#bookings">Bookings</a></li><li><a href="#rooms">Rooms</a></li></ul></div>
+        <div><h4>Info</h4><ul><li><a href="#about">About Us</a></li><li><a href="#contact">Contact</a></li><li><a href="#">Events</a></li><li><a href="#">Careers</a></li></ul></div>
+        <div><h4>Follow Us</h4><div class="social-links"><a href="#">Instagram</a><a href="#">Facebook</a><a href="#">TripAdvisor</a></div></div>
+      </div>
+      <div class="footer-bottom">© 2026 DAMINEEMA Restaurant & Hotel. All rights reserved.</div>
+    </footer>
+
+  </div><!-- end .site -->
+
+  <!-- ROOM BOOKING MODAL -->
+  <div class="modal-overlay" id="room-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="room-modal-title">Book Room</h3>
+        <button onclick="closeRoomBook()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-price">Price: <strong id="room-modal-price"></strong> / night</p>
+        <div class="form-group"><label>Full Name</label><input type="text" id="rm-name" placeholder="Your name" /></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="rm-phone" placeholder="07XX XXX XXX" /></div>
+        <div class="form-row">
+          <div class="form-group"><label>Check In</label><input type="date" id="rm-in" /></div>
+          <div class="form-group"><label>Check Out</label><input type="date" id="rm-out" /></div>
+        </div>
+        <div class="form-group"><label>Guests</label>
+          <select id="rm-guests"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+        </div>
+        <button class="btn-primary" style="width:100%;margin-top:1rem" onclick="confirmRoomBook()">Confirm Booking</button>
+        <p class="form-success" id="room-success"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER SUCCESS MODAL -->
+  <div class="modal-overlay" id="order-modal">
+    <div class="modal-box" style="text-align:center">
+      <div style="font-size:3rem;margin-bottom:1rem">🍽️</div>
+      <h3>Order Placed!</h3>
+      <p style="margin:1rem 0;color:var(--text-muted)">Your order has been sent to the kitchen. Estimated time: <strong>20–30 minutes</strong>.</p>
+      <button class="btn-primary" onclick="document.getElementById('order-modal').classList.remove('open')">Done</button>
+    </div>
+  </div>
+
+  <script src="restaurant.js"></script>
+</body>
+</html>
