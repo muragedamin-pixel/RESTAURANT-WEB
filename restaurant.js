@@ -29,11 +29,18 @@ const menuGrid  = document.getElementById('menu-grid');
 
 // Load menu from API on page load
 async function loadMenu(category = 'kenyan') {
+  menuGrid.innerHTML = `<p class="empty-msg" style="grid-column:1/-1;text-align:center;padding:3rem 0">Loading menu…</p>`;
+
   try {
     const res  = await fetch(`${API_BASE}/menu?category=${category}`);
     const data = await res.json();
 
     if (!res.ok) throw new Error(data.error || 'Failed to load menu');
+
+    if (!data.items || data.items.length === 0) {
+      menuGrid.innerHTML = `<p class="empty-msg" style="grid-column:1/-1;text-align:center;padding:2rem">No items in this category.</p>`;
+      return;
+    }
 
     menuGrid.innerHTML = data.items.map(item => `
       <div class="menu-card" data-cat="${item.category}">
@@ -49,7 +56,15 @@ async function loadMenu(category = 'kenyan') {
 
     wireAddButtons();
   } catch (err) {
-    menuGrid.innerHTML = `<p class="empty-msg">⚠️ Could not load menu. Please try again.</p>`;
+    menuGrid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:3rem 0">
+        <p class="empty-msg">⚠️ Could not load menu — make sure the server is running.</p>
+        <button onclick="loadMenu('${category}')" style="margin-top:1rem;padding:.5rem 1.5rem;
+          background:var(--gold);color:var(--green-dark);border:none;border-radius:4px;
+          font-weight:700;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-size:.8rem">
+          ↺ Retry
+        </button>
+      </div>`;
     console.error('Menu load error:', err);
   }
 }
