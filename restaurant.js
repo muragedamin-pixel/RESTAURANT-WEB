@@ -1,3 +1,7 @@
+// ── API BASE URL ──
+// Change this to your deployed API URL in production
+const API_BASE = 'http://localhost:3000/api';
+
 // ── SPLASH ──
 document.getElementById('splash-btn').addEventListener('click', () => {
   document.getElementById('splash').classList.add('hidden');
@@ -11,19 +15,46 @@ document.getElementById('hamburger').addEventListener('click', () => {
 });
 
 // ── MENU TABS ──
-const mtabs = document.querySelectorAll('.mtab');
-const menuCards = document.querySelectorAll('.menu-card');
+const mtabs     = document.querySelectorAll('.mtab');
+const menuGrid  = document.getElementById('menu-grid');
+
+// Load menu from API on page load
+async function loadMenu(category = 'kenyan') {
+  try {
+    const res  = await fetch(`${API_BASE}/menu?category=${category}`);
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Failed to load menu');
+
+    menuGrid.innerHTML = data.items.map(item => `
+      <div class="menu-card" data-cat="${item.category}">
+        <div class="menu-emoji">${item.emoji}</div>
+        <div class="menu-info">
+          <h4>${item.name}</h4>
+          <p>${item.description}</p>
+          <strong>Ksh ${item.price.toLocaleString()}</strong>
+        </div>
+        <button class="add-order" data-name="${item.name}" data-price="${item.price}">+ Add</button>
+      </div>
+    `).join('');
+
+    wireAddButtons();
+  } catch (err) {
+    menuGrid.innerHTML = `<p class="empty-msg">⚠️ Could not load menu. Please try again.</p>`;
+    console.error('Menu load error:', err);
+  }
+}
 
 mtabs.forEach(tab => {
   tab.addEventListener('click', () => {
     mtabs.forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    const cat = tab.dataset.cat;
-    menuCards.forEach(c => c.classList.toggle('hidden', c.dataset.cat !== cat));
-    // re-wire add buttons after filter
-    wireAddButtons();
+    loadMenu(tab.dataset.cat);
   });
 });
+
+// Initial load
+loadMenu('kenyan');
 
 // ── ORDER CART ──
 const orderCart = [];
@@ -31,7 +62,7 @@ const orderCart = [];
 function wireAddButtons() {
   document.querySelectorAll('.add-order').forEach(btn => {
     btn.onclick = () => {
-      const name = btn.dataset.name;
+      const name  = btn.dataset.name;
       const price = parseInt(btn.dataset.price);
       orderCart.push({ name, price });
       renderOrder();
@@ -41,13 +72,12 @@ function wireAddButtons() {
     };
   });
 }
-wireAddButtons();
 
 function renderOrder() {
-  const itemsEl = document.getElementById('order-items');
+  const itemsEl  = document.getElementById('order-items');
   const footerEl = document.getElementById('order-footer');
-  const totalEl = document.getElementById('order-total');
-  const countEl = document.getElementById('cart-count');
+  const totalEl  = document.getElementById('order-total');
+  const countEl  = document.getElementById('cart-count');
 
   countEl.textContent = orderCart.length;
 
@@ -56,6 +86,7 @@ function renderOrder() {
     footerEl.style.display = 'none';
     return;
   }
+
   footerEl.style.display = 'block';
   itemsEl.innerHTML = orderCart.map((item, i) => `
     <div class="order-item">
@@ -74,44 +105,143 @@ function removeOrderItem(i) {
   renderOrder();
 }
 
-function placeOrder() {
+// Place order — sends to API
+async function placeOrder() {
   if (!orderCart.length) return;
-  orderCart.length = 0;
-  renderOrder();
-  document.getElementById('order-modal').classList.add('open');
+
+  const note = document.getElementById('order-note').value;
+  const btn  = document.querySelector('#order-footer .btn-primary');
+  btn.textContent = 'Placing order…';
+  btn.disabled    = true;
+
+  try {
+    const res  = await fetch(`${API_BASE}/orders`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ items: [...orderCart], note })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Order failed');
+
+    orderCart.length = 0;
+    renderOrder();
+    document.getElementById('order-note').value = '';
+    document.getElementById('order-modal').classList.add('open');
+  } catch (err) {
+    alert('⚠️ Could not place order: ' + err.message);
+    console.error('Order error:', err);
+  } finally {
+    btn.textContent = 'Place Order';
+    btn.disabled    = false;
+  }
 }
 
-// ── TABLE BOOKING ──
-document.getElementById('table-form').addEventListener('submit', e => {
+// ── TABLE BOOKING — sends to API ──
+document.getElementById('table-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  document.getElementById('table-success').textContent = '✅ Table reserved! We\'ll confirm via phone shortly.';
-  e.target.reset();
+  const form    = e.target;
+  const inputs  = form.querySelectorAll('input, select');
+  const btn     = form.querySelector('button[type="submit"]');
+  const success = document.getElementById('table-success');
+
+  const [nameEl, phoneEl, dateEl, timeEl, guestsEl, seatingEl] = inputs;
+
+  btn.textContent = 'Reserving…';
+  btn.disabled    = true;
+  success.textContent = '';
+
+  try {
+    const res  = await fetch(`${API_BASE}/bookings/table`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:    nameEl.value,
+        phone:   phoneEl.value,
+        date:    dateEl.value,
+        time:    timeEl.value,
+        guests:  guestsEl.value,
+        seating: seatingEl.value
+      })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Reservation failed');
+
+    success.style.color = 'var(--green)';
+    success.textContent = `✅ Table reserved! Booking #${data.booking.id} — we'll confirm via phone shortly.`;
+    form.reset();
+  } catch (err) {
+    success.style.color = '#cc4444';
+    success.textContent = '⚠️ ' + err.message;
+  } finally {
+    btn.textContent = 'Reserve Table';
+    btn.disabled    = false;
+  }
 });
 
-// ── ROOM BOOKING ──
-let currentRoom = '';
+// ── ROOM BOOKING — sends to API ──
+let currentRoom  = '';
+let currentPrice = 0;
+
 function openRoomBook(name, price) {
-  currentRoom = name;
-  document.getElementById('room-modal-title').textContent = 'Book — ' + name;
-  document.getElementById('room-modal-price').textContent = 'Ksh ' + price.toLocaleString();
-  document.getElementById('room-success').textContent = '';
+  currentRoom  = name;
+  currentPrice = price;
+  document.getElementById('room-modal-title').textContent  = 'Book — ' + name;
+  document.getElementById('room-modal-price').textContent  = 'Ksh ' + price.toLocaleString();
+  document.getElementById('room-success').textContent      = '';
   document.getElementById('room-modal').classList.add('open');
 }
+
 function closeRoomBook() {
   document.getElementById('room-modal').classList.remove('open');
 }
-function confirmRoomBook() {
-  const name = document.getElementById('rm-name').value;
-  const phone = document.getElementById('rm-phone').value;
-  const inDate = document.getElementById('rm-in').value;
-  const outDate = document.getElementById('rm-out').value;
-  if (!name || !phone || !inDate || !outDate) {
-    document.getElementById('room-success').textContent = '⚠️ Please fill in all fields.';
-    document.getElementById('room-success').style.color = '#cc4444';
+
+async function confirmRoomBook() {
+  const name    = document.getElementById('rm-name').value;
+  const phone   = document.getElementById('rm-phone').value;
+  const checkIn = document.getElementById('rm-in').value;
+  const checkOut= document.getElementById('rm-out').value;
+  const guests  = document.getElementById('rm-guests').value;
+  const success = document.getElementById('room-success');
+  const btn     = document.querySelector('#room-modal .btn-primary');
+
+  if (!name || !phone || !checkIn || !checkOut) {
+    success.style.color  = '#cc4444';
+    success.textContent  = '⚠️ Please fill in all fields.';
     return;
   }
-  document.getElementById('room-success').textContent = `✅ ${currentRoom} booked for ${name}! Confirmation will be sent to ${phone}.`;
-  document.getElementById('room-success').style.color = 'var(--green)';
+
+  btn.textContent = 'Confirming…';
+  btn.disabled    = true;
+  success.textContent = '';
+
+  try {
+    const res  = await fetch(`${API_BASE}/bookings/room`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        room_name: currentRoom,
+        price:     currentPrice,
+        name, phone,
+        check_in:  checkIn,
+        check_out: checkOut,
+        guests:    parseInt(guests)
+      })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Booking failed');
+
+    success.style.color = 'var(--green)';
+    success.textContent = `✅ ${currentRoom} booked for ${name}! Booking #${data.booking.id} — ${data.summary.nights} night(s), ${data.summary.total_cost}. Confirmation sent to ${phone}.`;
+  } catch (err) {
+    success.style.color = '#cc4444';
+    success.textContent = '⚠️ ' + err.message;
+  } finally {
+    btn.textContent = 'Confirm Booking';
+    btn.disabled    = false;
+  }
 }
 
 // ── SCROLL NAV HIGHLIGHT ──
