@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waiter Dashboard — REAL Restaurant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Cinzel:wght@400;700&family=Lato:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="staff.css" />
+</head>
+<body class="dashboard-body">
+
+  <nav class="staff-nav">
+    <div class="nav-logo">REAL RESTAURANT</div>
+    <div class="nav-role waiter">🍽️ Waiter</div>
+    <div class="nav-links-staff">
+      <a href="kitchen.html">Kitchen</a>
+      <a href="waiter.html" class="active">Waiter</a>
+      <a href="manager.html">Manager</a>
+      <a href="index.html">← Main Site</a>
+    </div>
+    <div class="nav-clock" id="clock"></div>
+  </nav>
+
+  <main class="dashboard-main">
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stat-pill success">
+        <span class="stat-num" id="stat-ready">0</span>
+        <span class="stat-label">Ready to Serve</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-num" id="stat-tables">0</span>
+        <span class="stat-label">Today's Bookings</span>
+      </div>
+      <div class="stat-pill warning">
+        <span class="stat-num" id="stat-pending-tables">0</span>
+        <span class="stat-label">Pending Confirmations</span>
+      </div>
+      <div class="stat-pill muted">
+        <span class="stat-num" id="stat-delivered">0</span>
+        <span class="stat-label">Served Today</span>
+      </div>
+    </div>
+
+    <div class="waiter-grid">
+
+      <!-- READY ORDERS — needs delivery -->
+      <section class="waiter-section">
+        <div class="section-title-bar">
+          <h2>✅ Ready to Deliver</h2>
+          <button class="refresh-btn" onclick="refreshAll()">↺ Refresh</button>
+        </div>
+        <div class="order-list" id="ready-orders"></div>
+      </section>
+
+      <!-- TABLE BOOKINGS -->
+      <section class="waiter-section">
+        <div class="section-title-bar">
+          <h2>📋 Table Bookings</h2>
+          <div class="filter-tabs">
+            <button class="ftab active" onclick="filterBookings('all', this)">All</button>
+            <button class="ftab" onclick="filterBookings('pending', this)">Pending</button>
+            <button class="ftab" onclick="filterBookings('confirmed', this)">Confirmed</button>
+          </div>
+        </div>
+        <div class="booking-list" id="table-bookings"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="staff.js"></script>
+  <script>
+    initDashboard('waiter');
+  </script>
+</body>
+</html>

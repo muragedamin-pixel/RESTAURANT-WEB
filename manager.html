@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manager Dashboard — REAL Restaurant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Cinzel:wght@400;700&family=Lato:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="staff.css" />
+</head>
+<body class="dashboard-body">
+
+  <nav class="staff-nav">
+    <div class="nav-logo">REAL RESTAURANT</div>
+    <div class="nav-role manager">👔 Manager</div>
+    <div class="nav-links-staff">
+      <a href="kitchen.html">Kitchen</a>
+      <a href="waiter.html">Waiter</a>
+      <a href="manager.html" class="active">Manager</a>
+      <a href="index.html">← Main Site</a>
+    </div>
+    <div class="nav-clock" id="clock"></div>
+  </nav>
+
+  <main class="dashboard-main">
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon">🧾</div>
+        <div class="kpi-data">
+          <span class="kpi-num" id="kpi-total-orders">0</span>
+          <span class="kpi-label">Total Orders</span>
+        </div>
+      </div>
+      <div class="kpi-card gold">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-data">
+          <span class="kpi-num" id="kpi-revenue">Ksh 0</span>
+          <span class="kpi-label">Total Revenue</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🍽️</div>
+        <div class="kpi-data">
+          <span class="kpi-num" id="kpi-table-bookings">0</span>
+          <span class="kpi-label">Table Bookings</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🛏️</div>
+        <div class="kpi-data">
+          <span class="kpi-num" id="kpi-room-bookings">0</span>
+          <span class="kpi-label">Room Bookings</span>
+        </div>
+      </div>
+      <div class="kpi-card gold">
+        <div class="kpi-icon">🏨</div>
+        <div class="kpi-data">
+          <span class="kpi-num" id="kpi-room-revenue">Ksh 0</span>
+          <span class="kpi-label">Room Revenue</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">⏳</div>
+        <div class="kpi-data">
+          <span class="kpi-num" id="kpi-pending">0</span>
+          <span class="kpi-label">Pending Bookings</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="manager-grid">
+
+      <!-- ALL ORDERS -->
+      <section class="manager-section">
+        <div class="section-title-bar">
+          <h2>🧾 All Orders</h2>
+          <div class="filter-tabs">
+            <button class="ftab active" onclick="mgFilterOrders('all', this)">All</button>
+            <button class="ftab" onclick="mgFilterOrders('received', this)">New</button>
+            <button class="ftab" onclick="mgFilterOrders('preparing', this)">Preparing</button>
+            <button class="ftab" onclick="mgFilterOrders('ready', this)">Ready</button>
+            <button class="ftab" onclick="mgFilterOrders('delivered', this)">Delivered</button>
+          </div>
+        </div>
+        <div class="order-list" id="all-orders"></div>
+      </section>
+
+      <!-- RIGHT COLUMN -->
+      <div class="manager-right">
+
+        <!-- TABLE BOOKINGS -->
+        <section class="manager-section">
+          <div class="section-title-bar">
+            <h2>📋 Table Bookings</h2>
+            <div class="filter-tabs">
+              <button class="ftab active" onclick="mgFilterTables('all', this)">All</button>
+              <button class="ftab" onclick="mgFilterTables('pending', this)">Pending</button>
+              <button class="ftab" onclick="mgFilterTables('confirmed', this)">Confirmed</button>
+            </div>
+          </div>
+          <div class="booking-list" id="mg-table-bookings"></div>
+        </section>
+
+        <!-- ROOM BOOKINGS -->
+        <section class="manager-section">
+          <div class="section-title-bar">
+            <h2>🛏️ Room Bookings</h2>
+            <div class="filter-tabs">
+              <button class="ftab active" onclick="mgFilterRooms('all', this)">All</button>
+              <button class="ftab" onclick="mgFilterRooms('pending', this)">Pending</button>
+              <button class="ftab" onclick="mgFilterRooms('confirmed', this)">Confirmed</button>
+            </div>
+          </div>
+          <div class="booking-list" id="mg-room-bookings"></div>
+        </section>
+
+      </div>
+    </div>
+
+  </main>
+
+  <script src="staff.js"></script>
+  <script>
+    initDashboard('manager');
+  </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kitchen Dashboard — REAL Restaurant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Cinzel:wght@400;700&family=Lato:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="staff.css" />
+</head>
+<body class="dashboard-body">
+
+  <nav class="staff-nav">
+    <div class="nav-logo">REAL RESTAURANT</div>
+    <div class="nav-role kitchen">🍳 Kitchen</div>
+    <div class="nav-links-staff">
+      <a href="kitchen.html" class="active">Kitchen</a>
+      <a href="waiter.html">Waiter</a>
+      <a href="manager.html">Manager</a>
+      <a href="index.html">← Main Site</a>
+    </div>
+    <div class="nav-clock" id="clock"></div>
+  </nav>
+
+  <main class="dashboard-main">
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stat-pill">
+        <span class="stat-num" id="stat-received">0</span>
+        <span class="stat-label">New Orders</span>
+      </div>
+      <div class="stat-pill warning">
+        <span class="stat-num" id="stat-preparing">0</span>
+        <span class="stat-label">Preparing</span>
+      </div>
+      <div class="stat-pill success">
+        <span class="stat-num" id="stat-ready">0</span>
+        <span class="stat-label">Ready</span>
+      </div>
+      <div class="stat-pill muted">
+        <span class="stat-num" id="stat-delivered">0</span>
+        <span class="stat-label">Delivered Today</span>
+      </div>
+    </div>
+
+    <!-- KANBAN BOARD -->
+    <div class="kanban">
+
+      <!-- COLUMN: NEW ORDERS -->
+      <div class="kanban-col">
+        <div class="kanban-header received-header">
+          <h3>🔔 New Orders</h3>
+          <span class="col-count" id="col-received">0</span>
+        </div>
+        <div class="kanban-cards" id="col-received-cards"></div>
+      </div>
+
+      <!-- COLUMN: PREPARING -->
+      <div class="kanban-col">
+        <div class="kanban-header preparing-header">
+          <h3>🔥 Preparing</h3>
+          <span class="col-count" id="col-preparing">0</span>
+        </div>
+        <div class="kanban-cards" id="col-preparing-cards"></div>
+      </div>
+
+      <!-- COLUMN: READY -->
+      <div class="kanban-col">
+        <div class="kanban-header ready-header">
+          <h3>✅ Ready to Serve</h3>
+          <span class="col-count" id="col-ready">0</span>
+        </div>
+        <div class="kanban-cards" id="col-ready-cards"></div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="staff.js"></script>
+  <script>
+    initDashboard('kitchen');
+  </script>
+</body>
+</html>
