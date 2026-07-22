@@ -11,7 +11,57 @@ try {
   }
 } catch(_) {}
 
-// ── SPLASH ──
+// ── AUTO-VERIFY QR CODE ──
+// If URL has ?code=XXXXXXXX, verify it and auto-login the customer
+(async function autoVerifyCode() {
+  const params = new URLSearchParams(window.location.search);
+  const code   = params.get('code');
+  if (!code) return;
+
+  try {
+    const res  = await fetch(`${API_BASE}/auth/verify/${code}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    // Store token — customer is now logged in
+    localStorage.setItem('rr_token', data.token);
+    localStorage.setItem('rr_user',  JSON.stringify(data.user));
+
+    // Store table label so order form can pre-fill it
+    if (data.table) localStorage.setItem('rr_table', data.table);
+
+    // Clean the code from URL without reloading
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+
+    // Show welcome toast after page loads
+    window.addEventListener('load', () => {
+      showWelcomeToast(data.user.name, data.table);
+    });
+  } catch (err) {
+    console.warn('QR verify failed:', err.message);
+  }
+})();
+
+function showWelcomeToast(name, table) {
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position:fixed; bottom:1.5rem; right:1.5rem; z-index:9999;
+    background:#0f2318; color:#e8cc7a; border:1px solid #c9a84c;
+    border-radius:10px; padding:1rem 1.4rem; font-family:'Lato',sans-serif;
+    font-size:.9rem; font-weight:600; box-shadow:0 4px 20px rgba(0,0,0,.4);
+    max-width:280px; animation: slideUp .4s ease;
+  `;
+  el.innerHTML = `
+    <div style="font-size:1.4rem;margin-bottom:.3rem">👋</div>
+    <div>Welcome! You're verified as a customer${table ? ` at <strong>${table}</strong>` : ''}.</div>
+    <div style="font-size:.78rem;color:rgba(232,204,122,.6);margin-top:.3rem">You can now place orders directly.</div>
+  `;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+
 document.getElementById('splash-btn').addEventListener('click', () => {
   document.getElementById('splash').classList.add('hidden');
   const site = document.getElementById('site');
@@ -133,7 +183,14 @@ function removeOrderItem(i) {
 async function placeOrder() {
   if (!orderCart.length) return;
 
-  const note = document.getElementById('order-note').value;
+  // Pre-fill table from QR session if available
+  const tableLabel = localStorage.getItem('rr_table');
+  const noteEl     = document.getElementById('order-note');
+  if (tableLabel && noteEl && !noteEl.value) {
+    noteEl.placeholder = `Table: ${tableLabel} — add any special instructions…`;
+  }
+
+  const note = noteEl ? noteEl.value || (tableLabel ? `Table: ${tableLabel}` : '') : '';
   const btn  = document.querySelector('#order-footer .btn-primary');
   btn.textContent = 'Placing order…';
   btn.disabled    = true;

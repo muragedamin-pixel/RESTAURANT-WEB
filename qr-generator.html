@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Generator — REAL Restaurant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Cinzel:wght@400;700&family=Lato:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="staff.css" />
+  <style>
+    .qr-generator { max-width: 900px; margin: 0 auto; }
+
+    .qr-form-card {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .qr-form-card h2 { font-size: 1.1rem; margin-bottom: 1rem; font-family: 'Lato',sans-serif; }
+
+    .qr-form-row { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
+    .qr-form-row .form-group { flex: 1; min-width: 160px; margin: 0; }
+    .form-group label {
+      display: block; font-size: .72rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: .4rem;
+    }
+    .form-group input, .form-group select {
+      width: 100%; padding: .72rem 1rem;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      font-family: 'Lato',sans-serif; font-size: .9rem;
+      background: #fff; color: var(--text);
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none; border-color: var(--gold);
+    }
+    .gen-btn {
+      padding: .72rem 1.8rem; background: var(--gold); color: var(--green-dark);
+      border: none; border-radius: 6px; font-weight: 700; font-size: .85rem;
+      letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+      transition: background .2s; white-space: nowrap;
+    }
+    .gen-btn:hover { background: var(--gold-light); }
+
+    /* QR Cards grid */
+    .qr-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.2rem;
+    }
+    .qr-card {
+      background: var(--cream); border: 2px solid var(--gold);
+      border-radius: 12px; padding: 1.4rem; text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      animation: slideIn .3s ease;
+    }
+    .qr-card .restaurant-name {
+      font-family: 'Cinzel', serif; font-size: .9rem;
+      letter-spacing: .2em; color: var(--green-dark); margin-bottom: .3rem;
+    }
+    .qr-card .table-name {
+      font-family: 'Cormorant Garamond', serif; font-size: 1.3rem;
+      color: var(--green); font-weight: 700; margin-bottom: .8rem;
+    }
+    .qr-card img { width: 180px; height: 180px; border-radius: 8px; margin-bottom: .8rem; }
+    .qr-card .code-number {
+      font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: .3em;
+      color: var(--green-dark); background: var(--cream2);
+      padding: .3rem .8rem; border-radius: 4px; margin-bottom: .5rem;
+      display: inline-block;
+    }
+    .qr-card .qr-instructions {
+      font-size: .72rem; color: var(--text-muted); margin-bottom: .9rem;
+      line-height: 1.5;
+    }
+    .qr-card .expires {
+      font-size: .68rem; color: var(--text-muted);
+      margin-bottom: .8rem;
+    }
+    .qr-card .print-btn {
+      padding: .4rem 1.1rem; background: var(--green-dark); color: var(--gold);
+      border: 1px solid var(--gold); border-radius: 4px;
+      font-size: .72rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; cursor: pointer; transition: all .2s;
+    }
+    .qr-card .print-btn:hover { background: var(--gold); color: var(--green-dark); }
+
+    /* Active codes list */
+    .active-codes { margin-top: 1.5rem; }
+    .active-codes h3 {
+      font-size: 1rem; font-family: 'Lato',sans-serif;
+      font-weight: 700; margin-bottom: .8rem;
+    }
+    .code-row {
+      display: flex; align-items: center; gap: 1rem;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 8px; padding: .7rem 1rem; margin-bottom: .5rem;
+      font-size: .82rem;
+    }
+    .code-row .code-val  { font-family: 'Cinzel',serif; font-size:.9rem; color:var(--green-dark); letter-spacing:.15em; min-width:90px; }
+    .code-row .code-table { flex:1; color:var(--text); }
+    .code-row .code-uses  { color:var(--text-muted); font-size:.75rem; min-width:60px; }
+    .code-row .code-exp   { color:var(--text-muted); font-size:.72rem; }
+
+    @media print {
+      .staff-nav, .qr-form-card, .active-codes, .gen-btn, .print-btn { display: none !important; }
+      .qr-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+      .qr-card { border: 2px solid #000; break-inside: avoid; }
+    }
+    @keyframes slideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body class="dashboard-body">
+
+  <nav class="staff-nav">
+    <div class="nav-logo">REAL RESTAURANT</div>
+    <div class="nav-role manager">👔 Manager</div>
+    <div class="nav-links-staff">
+      <a href="kitchen.html">Kitchen</a>
+      <a href="waiter.html">Waiter</a>
+      <a href="manager.html">Manager</a>
+      <a href="qr-generator.html" class="active">QR Codes</a>
+      <a href="index.html">← Main Site</a>
+    </div>
+    <div class="nav-clock" id="clock"></div>
+  </nav>
+
+  <main class="dashboard-main">
+    <div class="qr-generator">
+
+      <!-- GENERATE FORM -->
+      <div class="qr-form-card">
+        <h2>🔲 Generate Customer QR Code</h2>
+        <div class="qr-form-row">
+          <div class="form-group">
+            <label>Table / Location Label</label>
+            <input type="text" id="table-input" placeholder="e.g. Table 4, Terrace 2, Bar Seat 1" />
+          </div>
+          <div class="form-group" style="max-width:160px">
+            <label>How many codes?</label>
+            <select id="qty-select">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="4">4</option>
+              <option value="6">6</option>
+              <option value="10">10</option>
+            </select>
+          </div>
+          <button class="gen-btn" onclick="generateCodes()">Generate QR</button>
+          <button class="gen-btn" style="background:var(--green-dark);color:var(--gold);border:1px solid var(--gold)"
+            onclick="window.print()">🖨️ Print All</button>
+        </div>
+        <div id="gen-error" style="color:#c0392b;font-size:.82rem;margin-top:.7rem;display:none"></div>
+      </div>
+
+      <!-- QR CARDS -->
+      <div class="qr-grid" id="qr-grid"></div>
+
+      <!-- ACTIVE CODES -->
+      <div class="active-codes" id="active-codes-section">
+        <h3>📋 Active Codes (last 24h)</h3>
+        <div id="active-codes-list"><p style="color:var(--text-muted);font-size:.85rem">Loading…</p></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="auth-guard.js"></script>
+  <script>
+    const API = 'https://real-restaurant-api-production.up.railway.app/api';
+
+    // Start clock
+    function startClock() {
+      const el = document.getElementById('clock');
+      if (!el) return;
+      const tick = () => el.textContent = new Date().toLocaleTimeString('en-KE', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      tick(); setInterval(tick, 1000);
+    }
+
+    async function generateCodes() {
+      const label = document.getElementById('table-input').value.trim();
+      const qty   = parseInt(document.getElementById('qty-select').value);
+      const errEl = document.getElementById('gen-error');
+      errEl.style.display = 'none';
+
+      if (!label) {
+        errEl.textContent = 'Please enter a table or location label.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      const btn = document.querySelector('.gen-btn');
+      btn.textContent = 'Generating…'; btn.disabled = true;
+
+      try {
+        const results = await Promise.all(
+          Array.from({ length: qty }, (_, i) =>
+            fetch(`${API}/auth/guest-token`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ table_label: qty > 1 ? `${label} (${i + 1})` : label })
+            }).then(r => r.json())
+          )
+        );
+
+        const grid = document.getElementById('qr-grid');
+        results.forEach(data => {
+          const card = document.createElement('div');
+          card.className = 'qr-card';
+          card.innerHTML = `
+            <div class="restaurant-name">✦ REAL RESTAURANT ✦</div>
+            <div class="table-name">${data.table_label}</div>
+            <img src="${data.qr}" alt="QR Code for ${data.table_label}" />
+            <div class="code-number">${data.code}</div>
+            <div class="qr-instructions">
+              Scan to open the menu and place your order directly from your phone.
+            </div>
+            <div class="expires">⏱ Valid until ${new Date(data.expires_at).toLocaleTimeString('en-KE', { hour:'2-digit', minute:'2-digit' })} (12 hrs)</div>
+            <button class="print-btn" onclick="printCard(this)">🖨️ Print This</button>
+          `;
+          grid.prepend(card);
+        });
+
+        loadActiveCodes();
+      } catch (err) {
+        errEl.textContent = '⚠️ Failed to generate: ' + err.message;
+        errEl.style.display = 'block';
+      } finally {
+        btn.textContent = 'Generate QR'; btn.disabled = false;
+      }
+    }
+
+    function printCard(btn) {
+      const card = btn.closest('.qr-card').cloneNode(true);
+      card.querySelector('.print-btn').remove();
+      const win = window.open('', '_blank', 'width=400,height=550');
+      win.document.write(`
+        <html><head><title>QR Code</title>
+        <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;600&display=swap" rel="stylesheet"/>
+        <style>
+          body { font-family:'Lato',sans-serif; display:flex; justify-content:center; padding:2rem; background:#faf6ee; }
+          .qr-card { text-align:center; border:2px solid #c9a84c; border-radius:12px; padding:1.5rem; max-width:260px; background:#faf6ee; }
+          .restaurant-name { font-family:'Cinzel',serif; font-size:.85rem; letter-spacing:.2em; color:#0f2318; margin-bottom:.3rem; }
+          .table-name { font-size:1.3rem; font-weight:700; color:#1a3a2a; margin-bottom:.8rem; }
+          img { width:180px; height:180px; border-radius:8px; margin-bottom:.7rem; }
+          .code-number { font-family:'Cinzel',serif; font-size:1rem; letter-spacing:.3em; background:#f2ebe0; padding:.3rem .8rem; border-radius:4px; display:inline-block; margin-bottom:.5rem; }
+          .qr-instructions { font-size:.72rem; color:#6a5a4a; margin-bottom:.6rem; line-height:1.5; }
+          .expires { font-size:.68rem; color:#6a5a4a; }
+        </style></head><body>${card.outerHTML}</body></html>
+      `);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); win.close(); }, 500);
+    }
+
+    async function loadActiveCodes() {
+      try {
+        const res   = await fetch(`${API}/auth/guest-codes`);
+        const codes = await res.json();
+        const el    = document.getElementById('active-codes-list');
+
+        if (!codes.length) {
+          el.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">No active codes yet.</p>';
+          return;
+        }
+
+        el.innerHTML = codes.map(c => `
+          <div class="code-row">
+            <span class="code-val">${c.code}</span>
+            <span class="code-table">${c.table_label}</span>
+            <span class="code-uses">👁 ${c.used} scan${c.used !== 1 ? 's' : ''}</span>
+            <span class="code-exp">Expires ${new Date(c.expires_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</span>
+          </div>
+        `).join('');
+      } catch(e) {
+        document.getElementById('active-codes-list').innerHTML =
+          '<p style="color:#c0392b;font-size:.82rem">Could not load active codes.</p>';
+      }
+    }
+
+    // Init
+    guardPage(['manager']).then(ok => {
+      if (!ok) return;
+      startClock();
+      loadActiveCodes();
+    });
+  </script>
+</body>
+</html>
