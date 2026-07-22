@@ -4,7 +4,7 @@
  * Call: guardPage(['kitchen']) or guardPage(['waiter']) or guardPage(['manager'])
  */
 
-const API = 'http://localhost:3000/api';
+const API = 'https://real-restaurant-api-production.up.railway.app/api';
 
 function getToken()   { return localStorage.getItem('rr_token'); }
 function getUser()    { return JSON.parse(localStorage.getItem('rr_user') || 'null'); }

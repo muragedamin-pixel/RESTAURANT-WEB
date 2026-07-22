@@ -1,6 +1,6 @@
 // ── CONFIG ──
-const API         = 'http://localhost:3000/api';
-const SOCKET_URL  = 'http://localhost:3000';
+const API         = 'https://real-restaurant-api-production.up.railway.app/api';
+const SOCKET_URL  = 'https://real-restaurant-api-production.up.railway.app';
 
 // ── SOCKET.IO CLIENT (loaded from CDN in each HTML page) ──
 let socket = null;

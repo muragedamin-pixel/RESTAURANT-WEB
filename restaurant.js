@@ -1,6 +1,6 @@
 // ── API BASE URL ──
-const API_BASE   = 'http://localhost:3000/api';
-const SOCKET_URL = 'http://localhost:3000';
+const API_BASE   = 'https://real-restaurant-api-production.up.railway.app/api';
+const SOCKET_URL = 'https://real-restaurant-api-production.up.railway.app';
 
 // ── CUSTOMER SOCKET (optional live feedback) ──
 let customerSocket = null;
