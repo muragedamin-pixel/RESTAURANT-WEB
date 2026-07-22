@@ -65,6 +65,19 @@ db.exec(`
   );
 `);
 
+// ── USERS TABLE ──
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT    NOT NULL,
+    email      TEXT    NOT NULL UNIQUE,
+    password   TEXT    NOT NULL,
+    role       TEXT    NOT NULL DEFAULT 'customer'
+               CHECK(role IN ('customer','kitchen','waiter','manager')),
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+`);
+
 // ── SEED MENU if empty ──
 const menuCount = db.prepare('SELECT COUNT(*) as c FROM menu_items').get();
 if (menuCount.c === 0) {

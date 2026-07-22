@@ -38,6 +38,7 @@
       </ul>
       <div class="nav-actions">
         <div class="cart-icon" id="cart-icon">🛒 <span class="cart-count" id="cart-count">0</span></div>
+        <div id="nav-auth-area"></div>
       </div>
       <div class="hamburger" id="hamburger">&#9776;</div>
     </nav>
@@ -413,5 +414,40 @@
   </div>
 
   <script src="restaurant.js"></script>
+  <script>
+    // ── NAV AUTH UI ──
+    (function() {
+      const user  = JSON.parse(localStorage.getItem('rr_user') || 'null');
+      const token = localStorage.getItem('rr_token');
+      const area  = document.getElementById('nav-auth-area');
+      if (!area) return;
+
+      if (user && token) {
+        // Logged in — show name + sign out
+        area.innerHTML = `
+          <span style="font-size:.78rem;color:rgba(250,246,238,.65);white-space:nowrap">
+            👤 ${user.name}
+          </span>
+          <button onclick="localStorage.removeItem('rr_token');localStorage.removeItem('rr_user');location.reload()"
+            style="padding:.3rem .7rem;border:1px solid rgba(201,168,76,.4);border-radius:4px;
+                   background:transparent;color:var(--gold);font-size:.72rem;font-weight:700;
+                   letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-left:.5rem">
+            Sign Out
+          </button>`;
+      } else {
+        // Not logged in — show Login button
+        area.innerHTML = `
+          <a href="login.html"
+            style="padding:.45rem 1.1rem;border:1.5px solid var(--gold);border-radius:2px;
+                   color:var(--gold);font-size:.78rem;font-weight:700;letter-spacing:.1em;
+                   text-transform:uppercase;text-decoration:none;white-space:nowrap;
+                   transition:all .2s"
+            onmouseover="this.style.background='var(--gold)';this.style.color='var(--green-dark)'"
+            onmouseout="this.style.background='transparent';this.style.color='var(--gold)'">
+            Login
+          </a>`;
+      }
+    })();
+  </script>
 </body>
 </html>

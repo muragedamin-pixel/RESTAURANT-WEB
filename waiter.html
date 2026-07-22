@@ -70,9 +70,10 @@
     </div>
   </main>
 
+  <script src="auth-guard.js"></script>
   <script src="staff.js"></script>
   <script>
-    initDashboard('waiter');
+    guardPage(['waiter']).then(ok => { if (ok) initDashboard('waiter'); });
   </script>
 </body>
 </html>

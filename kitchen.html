@@ -77,9 +77,10 @@
 
   </main>
 
+  <script src="auth-guard.js"></script>
   <script src="staff.js"></script>
   <script>
-    initDashboard('kitchen');
+    guardPage(['kitchen']).then(ok => { if (ok) initDashboard('kitchen'); });
   </script>
 </body>
 </html>

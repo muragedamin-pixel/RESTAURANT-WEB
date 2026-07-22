@@ -120,9 +120,10 @@
 
   </main>
 
+  <script src="auth-guard.js"></script>
   <script src="staff.js"></script>
   <script>
-    initDashboard('manager');
+    guardPage(['manager']).then(ok => { if (ok) initDashboard('manager'); });
   </script>
 </body>
 </html>
