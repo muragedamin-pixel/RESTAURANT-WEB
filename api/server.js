@@ -1,6 +1,8 @@
 require('dotenv').config();
-const express  = require('express');
-const cors     = require('cors');
+const express    = require('express');
+const http       = require('http');
+const { Server } = require('socket.io');
+const cors       = require('cors');
 
 const menuRouter     = require('./routes/menu');
 const ordersRouter   = require('./routes/orders');
@@ -8,8 +10,19 @@ const bookingsRouter = require('./routes/bookings');
 const authRouter     = require('./routes/auth');
 const { authenticate, requireRole } = require('./middleware/auth');
 
-const app  = express();
+const app    = express();
+const server = http.createServer(app);        // http server wraps express
+const io     = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_ORIGIN || '*',
+    methods: ['GET', 'POST']
+  }
+});
+
 const PORT = process.env.PORT || 3000;
+
+// ── Share io with routes via app locals ──
+app.set('io', io);
 
 // ── MIDDLEWARE ──
 app.use(cors({
@@ -19,31 +32,40 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// ── AUTH (public) ──
-app.use('/api/auth', authRouter);
+// ── SOCKET.IO ROOMS ──
+io.on('connection', (socket) => {
+  console.log(`🔌 Client connected: ${socket.id}`);
 
-// ── MENU (public) ──
-app.use('/api/menu', menuRouter);
+  // Client tells us what role/room it belongs to
+  socket.on('join', (room) => {
+    socket.join(room);
+    console.log(`   ↳ joined room: ${room}`);
+  });
 
-// ── ORDERS ──
-// POST — any authenticated user (customer or staff can place orders)
-app.post('/api/orders',           authenticate, ordersRouter);
-// GET / PATCH — staff only
-app.get('/api/orders',            authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
-app.get('/api/orders/:id',        authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
-app.patch('/api/orders/:id/status', authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
+  socket.on('disconnect', () => {
+    console.log(`🔌 Client disconnected: ${socket.id}`);
+  });
+});
 
-// ── BOOKINGS ──
-// POST — public (customers book from the website)
-app.post('/api/bookings/table',               bookingsRouter);
-app.post('/api/bookings/room',                bookingsRouter);
-// GET / PATCH — staff only
-app.get('/api/bookings/table',                authenticate, requireRole('waiter','manager'), bookingsRouter);
-app.get('/api/bookings/table/:id',            authenticate, requireRole('waiter','manager'), bookingsRouter);
-app.patch('/api/bookings/table/:id/status',   authenticate, requireRole('waiter','manager'), bookingsRouter);
-app.get('/api/bookings/room',                 authenticate, requireRole('manager'), bookingsRouter);
-app.get('/api/bookings/room/:id',             authenticate, requireRole('manager'), bookingsRouter);
-app.patch('/api/bookings/room/:id/status',    authenticate, requireRole('manager'), bookingsRouter);
+// ── ROUTES ──
+app.use('/api/auth',    authRouter);
+app.use('/api/menu',    menuRouter);
+
+// Orders
+app.post('/api/orders',               authenticate,                                        ordersRouter);
+app.get('/api/orders',                authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
+app.get('/api/orders/:id',            authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
+app.patch('/api/orders/:id/status',   authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
+
+// Bookings — POST public, GET/PATCH staff only
+app.post('/api/bookings/table',                                                            bookingsRouter);
+app.post('/api/bookings/room',                                                             bookingsRouter);
+app.get('/api/bookings/table',              authenticate, requireRole('waiter','manager'), bookingsRouter);
+app.get('/api/bookings/table/:id',          authenticate, requireRole('waiter','manager'), bookingsRouter);
+app.patch('/api/bookings/table/:id/status', authenticate, requireRole('waiter','manager'), bookingsRouter);
+app.get('/api/bookings/room',               authenticate, requireRole('manager'),          bookingsRouter);
+app.get('/api/bookings/room/:id',           authenticate, requireRole('manager'),          bookingsRouter);
+app.patch('/api/bookings/room/:id/status',  authenticate, requireRole('manager'),          bookingsRouter);
 
 // ── HEALTH ──
 app.get('/api/health', (req, res) => {
@@ -61,13 +83,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
+// ── START ──
+server.listen(PORT, () => {
   console.log(`🍽️  REAL Restaurant API  →  http://localhost:${PORT}`);
-  console.log(`   PUBLIC  POST /api/auth/login`);
-  console.log(`   PUBLIC  POST /api/auth/register`);
-  console.log(`   PUBLIC  GET  /api/menu`);
-  console.log(`   AUTH    POST /api/orders`);
-  console.log(`   STAFF   GET  /api/orders`);
-  console.log(`   PUBLIC  POST /api/bookings/table|room`);
-  console.log(`   STAFF   GET  /api/bookings/table|room`);
+  console.log(`⚡  Socket.IO            →  ws://localhost:${PORT}`);
 });

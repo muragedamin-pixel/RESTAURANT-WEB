@@ -264,9 +264,21 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
   padding: .8rem 1.4rem; font-size: .85rem; font-weight: 600;
   box-shadow: 0 4px 20px rgba(0,0,0,.3);
   transform: translateY(100px); opacity: 0;
-  transition: all .3s ease;
+  transition: all .3s ease; max-width: 320px;
 }
-.toast.show { transform: translateY(0); opacity: 1; }
+.toast.show          { transform: translateY(0); opacity: 1; }
+.toast.toast-success { background: #1a4a2a; border-color: var(--success); color: #a8f0c0; }
+.toast.toast-error   { background: #4a1a1a; border-color: var(--red);     color: #f0a8a8; }
+.toast.toast-info    { background: var(--green-dark); border-color: var(--gold); color: var(--gold-light); }
+
+/* ── SOCKET STATUS DOT ── */
+.socket-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #ccc; display: inline-block; margin-right: .4rem;
+  transition: background .3s;
+}
+.socket-dot.connected    { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.socket-dot.disconnected { background: var(--red); }
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; }

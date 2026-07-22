@@ -2,11 +2,12 @@ const express = require('express');
 const router  = express.Router();
 const db      = require('../db');
 
+function getIO(req) { return req.app.get('io'); }
+
 // ══════════════════════════════════════════
 //  TABLE BOOKINGS
 // ══════════════════════════════════════════
 
-// POST /api/bookings/table — reserve a table
 router.post('/table', (req, res) => {
   const { name, phone, date, time, guests, seating } = req.body;
 
@@ -14,7 +15,6 @@ router.post('/table', (req, res) => {
     return res.status(400).json({ error: 'name, phone, date, time, and guests are required' });
   }
 
-  // Basic date validation — must not be in the past
   const bookingDate = new Date(`${date}T${time}`);
   if (isNaN(bookingDate.getTime()) || bookingDate < new Date()) {
     return res.status(400).json({ error: 'Please provide a valid future date and time' });
@@ -26,23 +26,25 @@ router.post('/table', (req, res) => {
   ).run(name, phone, date, time, guests, seating || 'Indoor');
 
   const booking = db.prepare('SELECT * FROM table_bookings WHERE id = ?').get(result.lastInsertRowid);
+
+  // 🔔 Notify waiter + manager
+  const io = getIO(req);
+  io.to('waiter').emit('booking:table:new', booking);
+  io.to('manager').emit('booking:table:new', booking);
+
   res.status(201).json({ message: 'Table reserved successfully', booking });
 });
 
-// GET /api/bookings/table — list all table bookings
 router.get('/table', (req, res) => {
-  const bookings = db.prepare('SELECT * FROM table_bookings ORDER BY date, time').all();
-  res.json(bookings);
+  res.json(db.prepare('SELECT * FROM table_bookings ORDER BY date, time').all());
 });
 
-// GET /api/bookings/table/:id
 router.get('/table/:id', (req, res) => {
   const booking = db.prepare('SELECT * FROM table_bookings WHERE id = ?').get(req.params.id);
   if (!booking) return res.status(404).json({ error: 'Booking not found' });
   res.json(booking);
 });
 
-// PATCH /api/bookings/table/:id/status — confirm or cancel
 router.patch('/table/:id/status', (req, res) => {
   const { status } = req.body;
   const allowed = ['pending', 'confirmed', 'cancelled'];
@@ -52,10 +54,15 @@ router.patch('/table/:id/status', (req, res) => {
 
   const result = db.prepare('UPDATE table_bookings SET status = ? WHERE id = ?')
     .run(status, req.params.id);
-
   if (result.changes === 0) return res.status(404).json({ error: 'Booking not found' });
 
   const booking = db.prepare('SELECT * FROM table_bookings WHERE id = ?').get(req.params.id);
+
+  // 🔔 Broadcast update
+  const io = getIO(req);
+  io.to('waiter').emit('booking:table:updated', booking);
+  io.to('manager').emit('booking:table:updated', booking);
+
   res.json({ message: 'Status updated', booking });
 });
 
@@ -63,7 +70,6 @@ router.patch('/table/:id/status', (req, res) => {
 //  ROOM BOOKINGS
 // ══════════════════════════════════════════
 
-// POST /api/bookings/room — book a hotel room
 router.post('/room', (req, res) => {
   const { room_name, price, name, phone, check_in, check_out, guests } = req.body;
 
@@ -93,6 +99,11 @@ router.post('/room', (req, res) => {
   ).run(room_name, price, name, phone, check_in, check_out, guests || 1);
 
   const booking = db.prepare('SELECT * FROM room_bookings WHERE id = ?').get(result.lastInsertRowid);
+
+  // 🔔 Notify manager only
+  const io = getIO(req);
+  io.to('manager').emit('booking:room:new', { ...booking, nights, total_cost: total });
+
   res.status(201).json({
     message: 'Room booked successfully',
     booking,
@@ -100,20 +111,16 @@ router.post('/room', (req, res) => {
   });
 });
 
-// GET /api/bookings/room — list all room bookings
 router.get('/room', (req, res) => {
-  const bookings = db.prepare('SELECT * FROM room_bookings ORDER BY check_in').all();
-  res.json(bookings);
+  res.json(db.prepare('SELECT * FROM room_bookings ORDER BY check_in').all());
 });
 
-// GET /api/bookings/room/:id
 router.get('/room/:id', (req, res) => {
   const booking = db.prepare('SELECT * FROM room_bookings WHERE id = ?').get(req.params.id);
   if (!booking) return res.status(404).json({ error: 'Booking not found' });
   res.json(booking);
 });
 
-// PATCH /api/bookings/room/:id/status
 router.patch('/room/:id/status', (req, res) => {
   const { status } = req.body;
   const allowed = ['pending', 'confirmed', 'cancelled'];
@@ -123,10 +130,13 @@ router.patch('/room/:id/status', (req, res) => {
 
   const result = db.prepare('UPDATE room_bookings SET status = ? WHERE id = ?')
     .run(status, req.params.id);
-
   if (result.changes === 0) return res.status(404).json({ error: 'Booking not found' });
 
   const booking = db.prepare('SELECT * FROM room_bookings WHERE id = ?').get(req.params.id);
+
+  const io = getIO(req);
+  io.to('manager').emit('booking:room:updated', booking);
+
   res.json({ message: 'Status updated', booking });
 });
 

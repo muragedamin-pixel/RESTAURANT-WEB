@@ -1,6 +1,15 @@
 // ── API BASE URL ──
-// Change this to your deployed API URL in production
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE   = 'http://localhost:3000/api';
+const SOCKET_URL = 'http://localhost:3000';
+
+// ── CUSTOMER SOCKET (optional live feedback) ──
+let customerSocket = null;
+try {
+  if (typeof io !== 'undefined') {
+    customerSocket = io(SOCKET_URL, { transports: ['websocket','polling'] });
+    customerSocket.emit('join', 'customer');
+  }
+} catch(_) {}
 
 // ── SPLASH ──
 document.getElementById('splash-btn').addEventListener('click', () => {
