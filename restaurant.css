@@ -1,5 +1,6 @@
 /* ── TOKENS ── */
 :root {
+  --bg: #0F0F0F;
   --green: #1a3a2a;
   --green-dark: #0f2318;
   --green-light: #2a5a3a;
@@ -30,7 +31,28 @@ ul { list-style: none; }
 }
 .splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 .splash-inner { text-align: center; padding: 2rem; }
-.splash-ornament { font-size: 2rem; color: var(--gold); letter-spacing: .5em; margin-bottom: 1.5rem; animation: pulse 2s infinite; }
+.splash-ornament { font-size: 2rem; color: var(--gold); letter-spacing: .5em; margin-bottom: 1.5rem; animation: pulse 2s infinite;
+                 display: inline-block;
+    animation: luxuryBounce 2s ease-in-out infinite;
+}
+
+@keyframes luxuryBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    25% {
+        transform: translateY(-6px);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
+
+    75% {
+        transform: translateY(-6px);
+    }
+                 }
 .splash-name {
   font-family: 'Cinzel', serif; font-size: clamp(2.5rem, 8vw, 5rem);
   color: var(--gold); letter-spacing: .3em; line-height: 1.1;
@@ -77,7 +99,7 @@ nav {
   padding: 1rem 5%; background: var(--green-dark);
   border-bottom: 1px solid rgba(201,168,76,.2); gap: 1rem;
 }
-.nav-logo { font-family: 'Cinzel', serif; font-size: 1.4rem; letter-spacing: .2em; color: var(--gold); white-space: nowrap; flex-shrink: 0; }
+.nav-logo { font-family: 'Platfair Display', serif; font-size: 1.4rem; letter-spacing: .2em; color: var(--gold); white-space: nowrap; flex-shrink: 0; }
 .nav-links { display: flex; gap: 1.8rem; }
 .nav-links a { font-size: .8rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: rgba(250,246,238,.7); transition: color .2s; white-space: nowrap; }
 .nav-links a:hover { color: var(--gold); }
@@ -119,7 +141,7 @@ nav {
 /* ── SECTION HEADERS ── */
 .section-header { text-align: center; margin-bottom: 3rem; }
 .section-label { font-size: .72rem; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; color: var(--gold); margin-bottom: .5rem; }
-.section-header h2 { font-size: 2.4rem; color: var(--text); }
+.section-header h2 { font-family: 'Manrope'; font-size: 2.4rem; color: white; }
 
 /* ── MENU ── */
 .menu-section { padding: 5rem 5%; background: var(--cream); }
@@ -128,7 +150,7 @@ nav {
   padding: .65rem 1.75rem; border: 1.5px solid var(--border); border-radius: 2px;
   background: transparent; cursor: pointer; font-weight: 700; font-size: .85rem;
   letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted);
-  font-family: 'Lato', sans-serif; transition: all .2s;
+  font-family: 'Manrope', sans-serif; transition: all .2s;
 }
 .mtab.active, .mtab:hover { background: var(--green); color: var(--gold); border-color: var(--green); }
 .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
@@ -153,7 +175,7 @@ nav {
 .add-order.added { background: var(--gold); color: var(--green-dark); }
 
 /* ── ORDER SECTION ── */
-.order-section { padding: 5rem 5%; background: var(--green-dark); }
+.order-section { padding: 5rem 5%; background: var(--bg); }
 .order-section .section-header h2 { color: var(--cream); }
 .order-section .section-label { color: var(--gold); }
 .order-box { max-width: 700px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
