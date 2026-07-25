@@ -114,15 +114,19 @@ nav {
 .nav-links {  display: flex;
     align-items: center;
     justify-content: flex-end;
-
     flex: 1;
+
     gap: clamp(15px, 2vw, 40px);
 
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 0;}
 
-    min-width: 0;}
+.nav-links li {
+    margin: 0;
+    padding: 0;
+}
+
 .nav-links a {   font-size: clamp(.75rem, 1vw, .95rem);
     font-weight: 600;
     letter-spacing: .12em;
@@ -132,7 +136,10 @@ nav {
     transition: color .2s;}
 
 .nav-links a:hover { color: var(--gold); }
-.nav-actions { display: flex; align-items: center; gap: 1rem;
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     flex-shrink: 0;
 }
 
@@ -152,7 +159,25 @@ nav {
 }
 .hamburger { display: none; font-size: 1.5rem; cursor: pointer; color: var(--gold);}
 
- @media (max-width: 900px) {
+/* =========================
+   Desktop
+========================= */
+@media (min-width: 901px) {
+
+    .nav-links {
+        display: flex;
+    }
+
+    .hamburger {
+        display: none;
+    }
+
+}
+
+/* =========================
+   Tablet
+========================= */
+@media (max-width: 900px) {
 
     .nav-links {
         display: none;
@@ -160,6 +185,31 @@ nav {
 
     .hamburger {
         display: block;
+    }
+
+    .nav-logo {
+        font-size: 1.2rem;
+    }
+
+}
+
+/* =========================
+   Phone
+========================= */
+@media (max-width: 600px) {
+
+    nav {
+        padding: 0.8rem 1rem;
+    }
+
+    .nav-logo {
+        font-size: 1rem;
+    }
+
+    .cart-icon {
+        font-size: 1.1rem;
+    }
+
 }
 
 /* ── HERO ── */
