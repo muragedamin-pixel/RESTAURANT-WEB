@@ -194,9 +194,10 @@ nav {
 .order-note textarea:focus { outline: none; border-color: var(--green); }
 
 /* ── BOOKINGS ── */
-.bookings-section { padding: 5rem 5%; background: var(--cream2); }
+.bookings-section { padding: 5rem 5%; background: rgba(20, 20, 20, 0.55 ); border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 20px;}
 .booking-form { max-width: 700px; margin: 0 auto; padding: 2.5rem; border: 1px solid var(--border); border-radius: 4px;
-    background: rgba(20, 20, 20, 0.55);
+    background: rgba(20, 20, 20, 0.55); 
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 
