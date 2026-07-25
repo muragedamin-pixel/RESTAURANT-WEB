@@ -33,7 +33,7 @@ ul { list-style: none; }
 .splash-inner { text-align: center; padding: 2rem; }
 .splash-ornament { font-size: 2rem; color: var(--gold); letter-spacing: .5em; margin-bottom: 1.5rem; animation: pulse 2s infinite;
                  display: inline-block;
-    animation: luxuryBounce 2s ease-in-out infinite;
+    animation: luxuryBounce 1s ease-in-out infinite;
 }
 
 @keyframes luxuryBounce {
@@ -42,15 +42,15 @@ ul { list-style: none; }
     }
 
     25% {
-        transform: translateY(-6px);
+        transform: translateY(-7px);
     }
 
     50% {
-        transform: translateY(-12px);
+        transform: translateY(-13px);
     }
 
     75% {
-        transform: translateY(-6px);
+        transform: translateY(-7px);
     }
                  }
 .splash-name {
