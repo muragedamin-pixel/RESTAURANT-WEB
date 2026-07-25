@@ -98,6 +98,15 @@ nav {
   display: flex; align-items: center; justify-content: space-between;
   padding: 1rem 5%; background: var(--green-dark);
   border-bottom: 1px solid rgba(201,168,76,.2); gap: 1rem;
+  @media (max-width: 768px) {
+
+    header {
+        padding: 15px 20px;
+    }
+
+    nav {
+        display: none; /* Replace with a hamburger menu later */
+    }
 }
 .nav-logo { font-family: 'Platfair Display', serif; font-size: 1.4rem; letter-spacing: .2em; color: var(--gold); white-space: nowrap; flex-shrink: 0; }
 .nav-links { display: flex; gap: 1.8rem; }
