@@ -155,7 +155,7 @@ nav {
 .mtab.active, .mtab:hover { background: var(--green); color: var(--gold); border-color: var(--green); }
 .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
 .menu-card {
-  background: var(--card); border: 1px solid var(--border); border-radius: 4px;
+  background: transparent; border: 1px solid var(--border); border-radius: 4px;
   padding: 1.25rem; display: flex; align-items: center; gap: 1rem;
   transition: box-shadow .2s, transform .2s;
 }
@@ -164,8 +164,8 @@ nav {
 .menu-emoji { font-size: 2.5rem; flex-shrink: 0; }
 .menu-info { flex: 1; }
 .menu-info h4 { font-size: 1rem; font-family: 'Cormorant Garamond', serif; font-weight: 700; margin-bottom: .25rem; }
-.menu-info p { font-size: .8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: .5rem; }
-.menu-info strong { color: var(--green); font-size: .95rem; }
+.menu-info p { font-size: .8rem; color: var(--card); line-height: 1.5; margin-bottom: .5rem; }
+.menu-info strong { color: var(--card); font-size: .95rem; }
 .add-order {
   background: var(--green); color: var(--gold); border: none;
   padding: .5rem .9rem; font-weight: 700; cursor: pointer; border-radius: 2px;
