@@ -1,5 +1,6 @@
 /* ── TOKENS ── */
 :root {
+  --silver: #C0C0C0;
   --bg: #0F0F0F;
   --green: #1a3a2a;
   --green-dark: #0f2318;
@@ -210,7 +211,7 @@ nav {
 .form-group label { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); }
 .form-group input, .form-group select, .form-group textarea {
   padding: .75rem 1rem; border: 1.5px solid var(--border); border-radius: 2px;
-  font-family: 'Lato', sans-serif; font-size: .9rem; background: var(--cream);
+  font-family: 'Lato', sans-serif; font-size: .9rem; background: var(--silver);
   color: var(--text); transition: border-color .2s;
 }
 .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--green); }
