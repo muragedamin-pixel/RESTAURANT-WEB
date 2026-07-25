@@ -174,21 +174,35 @@ nav {
 
 }
 
-/* =========================
-   Tablet
-========================= */
-@media (max-width: 900px) {
+/* ===========================
+   TABLETS (769px - 1024px)
+=========================== */
+@media (min-width: 769px) and (max-width: 1024px) {
 
-    .nav-links {
-        display: none;
+    .hero{
+        padding: 0 50px;
+        background-position: 65% center;
     }
 
-    .hamburger {
-        display: block;
+    .hero-content{
+        max-width: 480px;
     }
 
-    .nav-logo {
-        font-size: 1.2rem;
+    .hero h1{
+        font-size: clamp(3rem, 5vw, 4.5rem);
+        line-height: 1.1;
+    }
+
+    .hero p{
+        font-size: 1rem;
+    }
+
+    .hero-buttons{
+        gap: 15px;
+    }
+
+    .hero-buttons a{
+        padding: 14px 28px;
     }
 
 }
