@@ -101,34 +101,36 @@ nav {
 
     display: flex;
     align-items: center;
+    justify-content: space-between;
 
+    width: 100%;
     padding: 1rem 5%;
+    box-sizing: border-box;
+
     background: var(--green-dark);
     border-bottom: 1px solid rgba(201,168,76,.2);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    box-sizing: border-box;
 }
 .nav-logo { font-family: 'Platfair Display', serif; letter-spacing: .2em; color: var(--gold); white-space: nowrap; flex-shrink: 0;font-size:clamp(1.3rem,2vw,2.3rem);}
-.nav-links { display: flex; gap: 1.8rem; 
-    display:flex;
-    justify-content:flex-end;
-    align-items:center;
-
-    flex:1;
-
-    gap:clamp(15px,2vw,40px);
-}
-.nav-links a { font-size: .8rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: rgba(250,246,238,.7); transition: color .2s; white-space: nowrap; font-size:clamp(.75rem,1vw,.95rem);  display: flex;
-    flex-wrap: wrap;
+.nav-links {  display: flex;
+    align-items: center;
     justify-content: flex-end;
+
+    flex: 1;
     gap: clamp(15px, 2vw, 40px);
-    flex: 1;}
+
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    min-width: 0;}
+.nav-links a {   font-size: clamp(.75rem, 1vw, .95rem);
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(250,246,238,.7);
+    white-space: nowrap;
+    transition: color .2s;}
+
 .nav-links a:hover { color: var(--gold); }
 .nav-actions { display: flex; align-items: center; gap: 1rem;
     flex-shrink: 0;
@@ -149,7 +151,8 @@ nav {
   position: absolute; top: -5px; right: -8px;
 }
 .hamburger { display: none; font-size: 1.5rem; cursor: pointer; color: var(--gold);}
-  @media (max-width: 900px) {
+
+ @media (max-width: 900px) {
 
     .nav-links {
         display: none;
