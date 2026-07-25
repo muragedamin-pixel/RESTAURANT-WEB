@@ -108,6 +108,11 @@ nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
 }
 .nav-logo { font-family: 'Platfair Display', serif; letter-spacing: .2em; color: var(--gold); white-space: nowrap; flex-shrink: 0;font-size:clamp(1.3rem,2vw,2.3rem);}
 .nav-links { display: flex; gap: 1.8rem; 
@@ -125,7 +130,17 @@ nav {
     gap: clamp(15px, 2vw, 40px);
     flex: 1;}
 .nav-links a:hover { color: var(--gold); }
-.nav-actions { display: flex; align-items: center; gap: 1rem; }
+.nav-actions { display: flex; align-items: center; gap: 1rem;
+    flex-shrink: 0;
+}
+
+.nav-logo {
+    flex-shrink: 0;
+}
+
+.nav-links {
+    min-width: 0;
+}
 .cart-icon { position: relative; cursor: pointer; font-size: 1.3rem; color: var(--gold); }
 .cart-count {
   background: var(--gold); color: var(--green-dark);
@@ -133,7 +148,18 @@ nav {
   width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
   position: absolute; top: -5px; right: -8px;
 }
-.hamburger { display: none; font-size: 1.5rem; cursor: pointer; color: var(--gold); }
+.hamburger { display: none; font-size: 1.5rem; cursor: pointer; color: var(--gold);}
+  @media (max-width: 900px) {
+
+    .nav-links {
+        display: none;
+    }
+
+    .hamburger {
+        display: block;
+    }
+
+}
 
 /* ── HERO ── */
 .hero {
