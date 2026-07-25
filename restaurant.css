@@ -180,7 +180,7 @@ nav {
 .order-section { padding: 5rem 5%; background: var(--bg); }
 .order-section .section-header h2 { color: var(--cream); }
 .order-section .section-label { color: var(--gold); }
-.order-box { max-width: 700px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.order-box { max-width: 700px; margin: 0 auto; background: var(--silver); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
 .order-items { padding: 1.5rem; min-height: 100px; }
 .empty-msg { color: var(--text-muted); text-align: center; padding: 2rem 0; font-style: italic; }
 .order-item { display: flex; align-items: center; justify-content: space-between; padding: .75rem 0; border-bottom: 1px solid var(--border); font-size: .9rem; }
