@@ -95,7 +95,8 @@ ul { list-style: none; }
 /* ── NAV ── */
 nav {
   position: sticky; top: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: flex-end;
+  flex: 1; gap: clamp(15px 2vw 40px);
   padding: 1rem 5%; background: var(--green-dark);
   border-bottom: 1px solid rgba(201,168,76,.2); gap: 1rem;
 }
@@ -238,12 +239,12 @@ nav {
 .about-section { display: flex; align-items: center; gap: 5rem; padding: 5rem 5%; flex-wrap: wrap; background: #0D1B2A; }
 .about-text { flex: 1 1 320px; }
 .about-text h2 { font-size: 2.4rem; margin-bottom: 1rem; }
-.about-text p { color: var(--text-muted); line-height: 1.9; margin-bottom: 1.5rem; }
+.about-text p { color: var(--gold); line-height: 1.9; margin-bottom: 1.5rem; }
 .about-pillars { display: flex; flex-direction: column; gap: .6rem; }
 .about-pillars li { font-weight: 600; color: var(--green); }
 .about-stats { flex: 1 1 260px; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-.stat { background: var(--green-dark); border-radius: 4px; padding: 1.75rem; text-align: center; }
-.stat h3 { font-size: 2.2rem; color: var(--gold); font-family: 'Cormorant Garamond', serif; }
+.stat { background: var(--green-dark); border-radius: 4px; padding: 1.90rem; text-align: center; }
+.stat h3 { font-size: 2.2rem; color: var(--gold); font-family: 'Cormorant Garamond Italic', serif; }
 .stat p { font-size: .78rem; color: rgba(250,246,238,.6); text-transform: uppercase; letter-spacing: .08em; margin-top: .3rem; }
 
 /* ── CONTACT ── */
