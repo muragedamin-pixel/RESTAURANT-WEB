@@ -8,6 +8,7 @@ const menuRouter     = require('./routes/menu');
 const ordersRouter   = require('./routes/orders');
 const bookingsRouter = require('./routes/bookings');
 const authRouter     = require('./routes/auth');
+const staffRouter    = require('./routes/staff');
 const { authenticate, requireRole } = require('./middleware/auth');
 
 const app    = express();
@@ -51,7 +52,14 @@ io.on('connection', (socket) => {
 app.use('/api/auth',    authRouter);
 app.use('/api/menu',    menuRouter);
 
-// Orders
+// ── STAFF API — all under /api/staff, require auth + staff role ──
+app.use('/api/staff',
+  authenticate,
+  requireRole('kitchen', 'waiter', 'manager'),
+  staffRouter
+);
+
+// Orders (customer-facing POST kept public with auth)
 app.post('/api/orders',               authenticate,                                        ordersRouter);
 app.get('/api/orders',                authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
 app.get('/api/orders/:id',            authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);

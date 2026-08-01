@@ -73,7 +73,7 @@ async function guardPage(allowedRoles) {
 
   if (!allowedRoles.includes(user.role)) {
     // Wrong role — redirect to their own dashboard
-    const routes = { kitchen: 'kitchen.html', waiter: 'waiter.html', manager: 'manager.html' };
+    const routes = { kitchen: 'staff-kitchen.html', waiter: 'staff-waiter.html', manager: 'staff-manager.html' };
     window.location.href = routes[user.role] || 'login.html';
     return false;
   }

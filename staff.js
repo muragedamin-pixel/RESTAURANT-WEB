@@ -1,5 +1,6 @@
 // ── CONFIG ──
 const API         = 'https://real-restaurant-api-production.up.railway.app/api';
+const STAFF_API   = 'https://real-restaurant-api-production.up.railway.app/api/staff';
 const SOCKET_URL  = 'https://real-restaurant-api-production.up.railway.app';
 
 // ── SOCKET.IO CLIENT (loaded from CDN in each HTML page) ──
@@ -50,13 +51,13 @@ function statusBadge(status) {
 
 // ── API ──
 async function apiGet(path) {
-  const res = await fetch(`${API}${path}`);
+  const res = await fetch(`${STAFF_API}${path}`);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }
 
 async function apiPatch(path, body) {
-  const res = await fetch(`${API}${path}`, {
+  const res = await fetch(`${STAFF_API}${path}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
@@ -170,7 +171,6 @@ async function refreshKitchen() {
     renderKitchenBoard();
   } catch (e) { console.error('Kitchen refresh:', e); }
 }
-
 function initKitchenSocket() {
   socket.emit('join', 'kitchen');
 
@@ -439,12 +439,24 @@ function mgFilterRooms(filter, btn) {
 
 async function refreshManager() {
   try {
-    const [orders, tables, rooms] = await Promise.all([
-      apiGet('/orders'), apiGet('/bookings/table'), apiGet('/bookings/room')
+    const [orders, tables, rooms, stats] = await Promise.all([
+      apiGet('/orders'),
+      apiGet('/bookings/table'),
+      apiGet('/bookings/room'),
+      apiGet('/stats')
     ]);
     allOrders   = orders;
     allMgTables = tables;
     allMgRooms  = rooms;
+
+    // KPIs from dedicated stats endpoint
+    setEl('kpi-total-orders',   stats.orders.total);
+    setEl('kpi-revenue',        `Ksh ${stats.orders.revenue.toLocaleString()}`);
+    setEl('kpi-table-bookings', stats.tables.total);
+    setEl('kpi-room-bookings',  stats.rooms.total);
+    setEl('kpi-room-revenue',   `Ksh ${stats.rooms.revenue.toLocaleString()}`);
+    setEl('kpi-pending',        stats.tables.pending + stats.rooms.pending);
+
     renderManagerBoard();
   } catch (e) { console.error('Manager refresh:', e); }
 }

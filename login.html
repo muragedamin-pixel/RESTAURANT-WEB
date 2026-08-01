@@ -193,9 +193,9 @@
     function redirectAfterLogin(user) {
       // Staff go to their specific dashboard, customers go back to main site
       const routes = {
-        kitchen: 'kitchen.html',
-        waiter:  'waiter.html',
-        manager: 'manager.html',
+        kitchen:  'staff-kitchen.html',
+        waiter:   'staff-waiter.html',
+        manager:  'staff-manager.html',
         customer: 'index.html'
       };
       window.location.href = routes[user.role] || 'index.html';
