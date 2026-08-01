@@ -461,6 +461,107 @@ async function refreshManager() {
   } catch (e) { console.error('Manager refresh:', e); }
 }
 
+// ── STAFF LOGIN POPUP MODAL ──
+(function injectLoginPopupStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    #login-popup-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(15,35,24,.65); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s ease;
+    }
+    #login-popup-overlay.show { opacity: 1; pointer-events: all; }
+
+    #login-popup {
+      background: var(--cream, #faf6ee);
+      border: 2px solid var(--gold, #c9a84c);
+      border-radius: 16px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.5);
+      width: 100%; max-width: 380px; margin: 1rem;
+      padding: 2rem 2rem 1.5rem;
+      text-align: center;
+      transform: translateY(24px) scale(.96);
+      transition: transform .3s ease;
+    }
+    #login-popup-overlay.show #login-popup { transform: translateY(0) scale(1); }
+
+    .lp-icon  { font-size: 3rem; margin-bottom: .5rem; display: block; }
+    .lp-title {
+      font-family: 'Cinzel', serif; font-size: 1rem;
+      letter-spacing: .15em; color: var(--green-dark, #0f2318);
+      text-transform: uppercase; margin-bottom: .3rem;
+    }
+    .lp-name  {
+      font-family: 'Cormorant Garamond', serif; font-size: 1.7rem;
+      font-weight: 700; color: var(--green-dark, #0f2318);
+      margin-bottom: .2rem;
+    }
+    .lp-role  {
+      display: inline-block; font-size: .72rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      padding: .25rem .9rem; border-radius: 20px; margin-bottom: 1rem;
+    }
+    .lp-role.kitchen { background: rgba(231,76,60,.15); color: #c0392b; border: 1px solid #e74c3c; }
+    .lp-role.waiter  { background: rgba(52,152,219,.15); color: #2471a3; border: 1px solid #3498db; }
+    .lp-role.manager { background: rgba(201,168,76,.15); color: #7d6010; border: 1px solid #c9a84c; }
+
+    .lp-time  { font-size: .78rem; color: var(--text-muted, #6a5a4a); margin-bottom: 1.4rem; }
+
+    .lp-close {
+      background: var(--green-dark, #0f2318); color: var(--gold, #c9a84c);
+      border: 1px solid var(--gold, #c9a84c); border-radius: 6px;
+      padding: .55rem 2rem; font-size: .8rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase; cursor: pointer;
+      transition: background .2s;
+    }
+    .lp-close:hover { background: var(--green-light, #2a5a3a); }
+  `;
+  document.head.appendChild(style);
+})();
+
+function showLoginPopup(data) {
+  // Create overlay if it doesn't exist
+  let overlay = document.getElementById('login-popup-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'login-popup-overlay';
+    overlay.innerHTML = `
+      <div id="login-popup">
+        <span class="lp-icon" id="lp-icon"></span>
+        <div class="lp-title">Staff Login</div>
+        <div class="lp-name" id="lp-name"></div>
+        <span class="lp-role" id="lp-role"></span>
+        <div class="lp-time" id="lp-time"></div>
+        <button class="lp-close" onclick="closeLoginPopup()">Dismiss</button>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeLoginPopup(); });
+  }
+
+  const roleEmoji = { waiter: '🍽️', kitchen: '🍳', manager: '👔' };
+  const time = new Date(data.logged_in).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  document.getElementById('lp-icon').textContent  = roleEmoji[data.role] || '👤';
+  document.getElementById('lp-name').textContent  = data.name;
+  document.getElementById('lp-role').textContent  = data.role;
+  document.getElementById('lp-role').className    = `lp-role ${data.role}`;
+  document.getElementById('lp-time').textContent  = `Logged in at ${time}`;
+
+  overlay.classList.add('show');
+
+  // Auto-dismiss after 6 seconds
+  clearTimeout(overlay._autoClose);
+  overlay._autoClose = setTimeout(closeLoginPopup, 6000);
+}
+
+function closeLoginPopup() {
+  const overlay = document.getElementById('login-popup-overlay');
+  if (overlay) overlay.classList.remove('show');
+}
+window.closeLoginPopup = closeLoginPopup;
+
 // ── STAFF LOGIN ACTIVITY LOG (manager dashboard) ──
 let loginActivity = [];
 
@@ -497,10 +598,8 @@ function initManagerSocket() {
 
   // Staff login notification
   socket.on('staff:login', (data) => {
-    const roleEmoji = { waiter: '🍽️', kitchen: '🍳', manager: '👔' }[data.role] || '👤';
-    const time = new Date(data.logged_in).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' });
     playAlert();
-    toast(`${roleEmoji} ${data.name} (${data.role}) logged in at ${time}`, 'info');
+    showLoginPopup(data);
     addLoginActivity(data);
   });
 
