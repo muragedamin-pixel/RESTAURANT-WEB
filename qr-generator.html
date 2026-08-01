@@ -6,6 +6,7 @@
   <title>QR Code Generator — REAL Restaurant</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Cinzel:wght@400;700&family=Lato:wght@300;400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="staff.css" />
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
     .qr-generator { max-width: 900px; margin: 0 auto; }
 
@@ -113,9 +114,9 @@
     <div class="nav-logo">REAL RESTAURANT</div>
     <div class="nav-role manager">👔 Manager</div>
     <div class="nav-links-staff">
-      <a href="kitchen.html">Kitchen</a>
-      <a href="waiter.html">Waiter</a>
-      <a href="manager.html">Manager</a>
+      <a href="staff-kitchen.html">Kitchen</a>
+      <a href="staff-waiter.html">Waiter</a>
+      <a href="staff-manager.html">Manager</a>
       <a href="qr-generator.html" class="active">QR Codes</a>
       <a href="index.html">← Main Site</a>
     </div>
@@ -163,6 +164,7 @@
   </main>
 
   <script src="auth-guard.js"></script>
+  <script src="staff.js"></script>
   <script>
     const API = 'https://real-restaurant-api-production.up.railway.app/api';
 
@@ -275,11 +277,28 @@
       }
     }
 
-    // Init
-    guardPage(['manager']).then(ok => {
+    // Init — allow manager and waiter to access QR page
+    guardPage(['manager', 'waiter']).then(ok => {
       if (!ok) return;
       startClock();
       loadActiveCodes();
+
+      // Connect socket for staff login popups
+      const s = io('https://real-restaurant-api-production.up.railway.app', { transports: ['websocket','polling'] });
+      const user = JSON.parse(localStorage.getItem('rr_user') || 'null');
+      s.on('connect', () => {
+        s.emit('join', user?.role || 'manager');
+      });
+      s.on('staff:login', (data) => { playAlert(); showLoginPopup(data); });
+      s.on('order:new',   (order) => {
+        playAlert();
+        const items = order.items.map(i => `• ${i.name} — Ksh ${i.price.toLocaleString()}`).join('<br>');
+        showEventPopup({ icon:'🔔', title:'New Order', headline:`Order #${order.id}`, details:`${items}<br><strong>Total: Ksh ${order.total.toLocaleString()}</strong>` });
+      });
+      s.on('booking:table:new', (b) => {
+        playAlert();
+        showEventPopup({ icon:'📋', title:'New Table Booking', headline:b.name, details:`📅 ${b.date} at ${b.time}<br>👥 ${b.guests} guests • ${b.seating}<br>📞 ${b.phone}` });
+      });
     });
   </script>
 </body>
