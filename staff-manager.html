@@ -7,6 +7,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Cinzel:wght@400;700&family=Lato:wght@300;400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="staff.css" />
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    .activity-log { display: flex; flex-direction: column; gap: .6rem; padding: .5rem 0; }
+    .activity-item {
+      display: flex; align-items: center; gap: .9rem;
+      padding: .6rem .8rem; background: #fff;
+      border: 1px solid var(--border, #e0d8c8); border-radius: 8px;
+      border-left: 4px solid var(--gold, #c9a84c);
+    }
+    .activity-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .activity-info { flex: 1; display: flex; flex-direction: column; gap: .15rem; }
+    .activity-name { font-weight: 700; font-size: .88rem; color: #0f2318; }
+    .activity-role { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #6a5a4a; }
+    .activity-time { font-size: .75rem; color: #6a5a4a; white-space: nowrap; }
+  </style>
 </head>
 <body class="dashboard-body">
 
@@ -50,6 +64,15 @@
       </section>
 
       <div class="manager-right">
+        <section class="manager-section">
+          <div class="section-title-bar">
+            <h2>👥 Staff Activity</h2>
+          </div>
+          <div class="activity-log" id="staff-activity-log">
+            <div class="empty-state">No staff logins yet this session</div>
+          </div>
+        </section>
+
         <section class="manager-section">
           <div class="section-title-bar">
             <h2>📋 Table Bookings</h2>

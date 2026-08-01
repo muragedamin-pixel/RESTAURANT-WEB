@@ -461,8 +461,48 @@ async function refreshManager() {
   } catch (e) { console.error('Manager refresh:', e); }
 }
 
+// ── STAFF LOGIN ACTIVITY LOG (manager dashboard) ──
+let loginActivity = [];
+
+function addLoginActivity(data) {
+  loginActivity.unshift(data);
+  if (loginActivity.length > 20) loginActivity.pop(); // keep last 20
+  renderLoginActivity();
+}
+
+function renderLoginActivity() {
+  const el = document.getElementById('staff-activity-log');
+  if (!el) return;
+  if (loginActivity.length === 0) {
+    el.innerHTML = '<div class="empty-state">No staff logins yet this session</div>';
+    return;
+  }
+  const roleEmoji = { waiter: '🍽️', kitchen: '🍳', manager: '👔' };
+  el.innerHTML = loginActivity.map(d => {
+    const time = new Date(d.logged_in).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return `
+      <div class="activity-item">
+        <span class="activity-icon">${roleEmoji[d.role] || '👤'}</span>
+        <div class="activity-info">
+          <span class="activity-name">${d.name}</span>
+          <span class="activity-role">${d.role}</span>
+        </div>
+        <span class="activity-time">${time}</span>
+      </div>`;
+  }).join('');
+}
+
 function initManagerSocket() {
   socket.emit('join', 'manager');
+
+  // Staff login notification
+  socket.on('staff:login', (data) => {
+    const roleEmoji = { waiter: '🍽️', kitchen: '🍳', manager: '👔' }[data.role] || '👤';
+    const time = new Date(data.logged_in).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' });
+    playAlert();
+    toast(`${roleEmoji} ${data.name} (${data.role}) logged in at ${time}`, 'info');
+    addLoginActivity(data);
+  });
 
   socket.on('order:new', (order) => {
     playAlert();
