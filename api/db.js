@@ -121,4 +121,27 @@ if (menuCount.c === 0) {
   console.log('✅ Menu seeded with', db.prepare('SELECT COUNT(*) as c FROM menu_items').get().c, 'items');
 }
 
+// ── SEED STAFF ACCOUNTS if not present ──
+const bcrypt = require('bcryptjs');
+const staffAccounts = [
+  { name: 'Manager', email: 'manager@realrestaurant.com', password: 'manager@realrestaurant.com', role: 'manager' },
+  { name: 'Waiter',  email: 'waiter@realrestaurant.com',  password: 'waiter@realrestaurant.com',  role: 'waiter'  }
+];
+const upsertStaff = db.prepare(`
+  INSERT INTO users (name, email, password, role)
+  VALUES (?, ?, ?, ?)
+  ON CONFLICT(email) DO NOTHING
+`);
+const seedStaff = db.transaction(() => {
+  for (const s of staffAccounts) {
+    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(s.email);
+    if (!existing) {
+      const hashed = bcrypt.hashSync(s.password, 10);
+      upsertStaff.run(s.name, s.email, hashed, s.role);
+      console.log('✅ Seeded staff account:', s.email);
+    }
+  }
+});
+seedStaff();
+
 module.exports = db;
