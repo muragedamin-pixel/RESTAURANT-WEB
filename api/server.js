@@ -59,11 +59,11 @@ app.use('/api/staff',
   staffRouter
 );
 
-// Orders (customer POST is public, staff routes require auth)
-app.post('/api/orders',               ordersRouter);
-app.get('/api/orders',                authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
-app.get('/api/orders/:id',            authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
-app.patch('/api/orders/:id/status',   authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
+// Orders — POST is public (customers order without login), GET/PATCH require staff auth
+app.use('/api/orders', (req, res, next) => {
+  if (req.method === 'POST') return next();           // public
+  authenticate(req, res, () => requireRole('kitchen','waiter','manager')(req, res, next));
+}, ordersRouter);
 
 // Bookings — POST public, GET/PATCH staff only
 app.post('/api/bookings/table',                                                            bookingsRouter);
