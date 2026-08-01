@@ -30,16 +30,19 @@ router.post('/login', (req, res) => {
     { expiresIn: JWT_EXPIRES }
   );
 
-  // Notify manager room when any staff logs in
+  // Notify all staff rooms when any staff logs in
   const staffRoles = ['waiter', 'kitchen', 'manager'];
   if (staffRoles.includes(user.role)) {
     const io = req.app.get('io');
-    io.to('manager').emit('staff:login', {
+    const loginData = {
       name:      user.name,
       role:      user.role,
       email:     user.email,
       logged_in: new Date().toISOString()
-    });
+    };
+    io.to('manager').emit('staff:login', loginData);
+    io.to('kitchen').emit('staff:login', loginData);
+    io.to('waiter').emit('staff:login', loginData);
   }
 
   res.json({

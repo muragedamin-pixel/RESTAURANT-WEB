@@ -174,6 +174,12 @@ async function refreshKitchen() {
 function initKitchenSocket() {
   socket.emit('join', 'kitchen');
 
+  // Staff login notification — all dashboards get the popup
+  socket.on('staff:login', (data) => {
+    playAlert();
+    showLoginPopup(data);
+  });
+
   // New order arrives → add to received column
   socket.on('order:new', (order) => {
     playAlert();
@@ -280,6 +286,12 @@ async function refreshWaiter() {
 
 function initWaiterSocket() {
   socket.emit('join', 'waiter');
+
+  // Staff login notification — all dashboards get the popup
+  socket.on('staff:login', (data) => {
+    playAlert();
+    showLoginPopup(data);
+  });
 
   // Kitchen marked order ready — alert waiter
   socket.on('order:ready', (order) => {
@@ -517,12 +529,29 @@ async function refreshManager() {
       transition: background .2s;
     }
     .lp-close:hover { background: var(--green-light, #2a5a3a); }
+
+    .lp-confirm-label {
+      font-size: .75rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-muted, #6a5a4a);
+      margin-bottom: .5rem;
+    }
+    .lp-input {
+      width: 100%; padding: .65rem 1rem;
+      border: 1.5px solid var(--border, #e0d8c8); border-radius: 6px;
+      font-family: 'Lato', sans-serif; font-size: .9rem;
+      color: var(--text, #1a1a1a); background: #fff;
+      margin-bottom: .4rem; transition: border-color .2s;
+    }
+    .lp-input:focus { outline: none; border-color: var(--gold, #c9a84c); }
+    .lp-error {
+      font-size: .78rem; color: #c0392b; min-height: 1.2rem;
+      margin-bottom: .6rem;
+    }
   `;
   document.head.appendChild(style);
 })();
 
 function showLoginPopup(data) {
-  // Create overlay if it doesn't exist
   let overlay = document.getElementById('login-popup-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
@@ -530,14 +559,18 @@ function showLoginPopup(data) {
     overlay.innerHTML = `
       <div id="login-popup">
         <span class="lp-icon" id="lp-icon"></span>
-        <div class="lp-title">Staff Login</div>
+        <div class="lp-title">Staff Login Alert</div>
         <div class="lp-name" id="lp-name"></div>
         <span class="lp-role" id="lp-role"></span>
         <div class="lp-time" id="lp-time"></div>
-        <button class="lp-close" onclick="closeLoginPopup()">Dismiss</button>
+        <div class="lp-confirm-label">Type your name to acknowledge:</div>
+        <input class="lp-input" id="lp-input" type="text" placeholder="Your name…" autocomplete="off" />
+        <div class="lp-error" id="lp-error"></div>
+        <button class="lp-close" onclick="closeLoginPopup()">Acknowledge</button>
       </div>`;
     document.body.appendChild(overlay);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeLoginPopup(); });
+    // Block clicking outside to close
+    overlay.addEventListener('click', (e) => e.stopPropagation());
   }
 
   const roleEmoji = { waiter: '🍽️', kitchen: '🍳', manager: '👔' };
@@ -548,15 +581,28 @@ function showLoginPopup(data) {
   document.getElementById('lp-role').textContent  = data.role;
   document.getElementById('lp-role').className    = `lp-role ${data.role}`;
   document.getElementById('lp-time').textContent  = `Logged in at ${time}`;
+  document.getElementById('lp-input').value       = '';
+  document.getElementById('lp-error').textContent = '';
+
+  // Enter key to acknowledge
+  document.getElementById('lp-input').onkeydown = (e) => { if (e.key === 'Enter') closeLoginPopup(); };
 
   overlay.classList.add('show');
-
-  // Auto-dismiss after 6 seconds
-  clearTimeout(overlay._autoClose);
-  overlay._autoClose = setTimeout(closeLoginPopup, 6000);
+  setTimeout(() => document.getElementById('lp-input').focus(), 300);
 }
 
 function closeLoginPopup() {
+  const input   = document.getElementById('lp-input');
+  const errorEl = document.getElementById('lp-error');
+  if (!input) return;
+
+  const val = input.value.trim();
+  if (!val) {
+    errorEl.textContent = '⚠️ Please type your name to acknowledge.';
+    input.focus();
+    return;
+  }
+
   const overlay = document.getElementById('login-popup-overlay');
   if (overlay) overlay.classList.remove('show');
 }
