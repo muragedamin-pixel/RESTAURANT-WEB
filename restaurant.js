@@ -209,10 +209,14 @@ async function placeOrder() {
 
     if (!res.ok) throw new Error(data.error || 'Order failed');
 
+    const placedOrder = data.order;
     orderCart.length = 0;
     renderOrder();
     document.getElementById('order-note').value = '';
-    document.getElementById('order-modal').classList.add('open');
+
+    // Show live order tracker instead of static modal
+    showOrderTracker(placedOrder);
+    subscribeOrderUpdates(placedOrder.id);
   } catch (err) {
     alert('⚠️ Could not place order: ' + err.message);
     console.error('Order error:', err);
@@ -334,3 +338,169 @@ window.addEventListener('scroll', () => {
   const nav = document.getElementById('navbar');
   nav.style.boxShadow = window.scrollY > 50 ? '0 2px 20px rgba(0,0,0,.3)' : 'none';
 });
+
+// ══════════════════════════════════════════
+//  LIVE ORDER TRACKER
+// ══════════════════════════════════════════
+
+const STATUS_STEPS = ['received', 'preparing', 'ready', 'delivered'];
+const STATUS_LABELS = {
+  received:  { label: 'Order Received',   icon: '✅', desc: 'Your order has been received by the restaurant.' },
+  preparing: { label: 'Being Prepared',   icon: '🍳', desc: 'The kitchen is preparing your order now.' },
+  ready:     { label: 'Ready to Serve',   icon: '🔔', desc: 'Your order is ready! A waiter is on the way.' },
+  delivered: { label: 'Delivered',        icon: '🍽️', desc: 'Enjoy your meal! Thank you for dining with us.' }
+};
+
+// Inject tracker styles once
+(function injectTrackerStyles() {
+  if (document.getElementById('tracker-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'tracker-styles';
+  s.textContent = `
+    #order-tracker-overlay {
+      position: fixed; inset: 0; z-index: 8000;
+      background: rgba(15,35,24,.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    #order-tracker-overlay.show { opacity: 1; pointer-events: all; }
+
+    #order-tracker {
+      background: var(--cream, #faf6ee);
+      border: 2px solid var(--gold, #c9a84c);
+      border-radius: 16px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.5);
+      width: 100%; max-width: 440px; margin: 1rem;
+      padding: 2rem;
+      transform: translateY(20px) scale(.97);
+      transition: transform .3s;
+    }
+    #order-tracker-overlay.show #order-tracker { transform: translateY(0) scale(1); }
+
+    .ot-header { text-align: center; margin-bottom: 1.5rem; }
+    .ot-icon   { font-size: 2.8rem; display: block; margin-bottom: .4rem; }
+    .ot-title  { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: .2em; color: #0f2318; }
+    .ot-order-id { font-size: .78rem; color: #6a5a4a; margin-top: .2rem; }
+
+    .ot-steps  { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1.5rem; }
+    .ot-step   {
+      display: flex; align-items: center; gap: 1rem;
+      padding: .75rem 1rem; border-radius: 10px;
+      border: 1.5px solid #e0d8c8; background: #fff;
+      transition: all .3s;
+    }
+    .ot-step.active   { border-color: var(--gold, #c9a84c); background: #fffdf5; }
+    .ot-step.done     { border-color: #27ae60; background: #f0faf4; }
+    .ot-step.done .ot-step-icon   { color: #27ae60; }
+    .ot-step.active .ot-step-icon { color: var(--gold, #c9a84c); }
+
+    .ot-step-icon  { font-size: 1.5rem; flex-shrink: 0; }
+    .ot-step-info  { flex: 1; }
+    .ot-step-label { font-weight: 700; font-size: .88rem; color: #0f2318; }
+    .ot-step-desc  { font-size: .75rem; color: #6a5a4a; margin-top: .1rem; }
+    .ot-step-tick  { font-size: 1.1rem; color: #27ae60; display: none; }
+    .ot-step.done .ot-step-tick   { display: block; }
+
+    .ot-items { background: rgba(15,35,24,.05); border-radius: 8px; padding: .8rem 1rem; margin-bottom: 1.5rem; font-size: .82rem; color: #6a5a4a; }
+    .ot-items ul { margin: .4rem 0 0; padding-left: 1.2rem; }
+    .ot-items li { margin-bottom: .2rem; }
+
+    .ot-close {
+      width: 100%; padding: .7rem;
+      background: #0f2318; color: #c9a84c;
+      border: 1px solid #c9a84c; border-radius: 6px;
+      font-size: .8rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; cursor: pointer; transition: background .2s;
+    }
+    .ot-close:hover { background: #1a3a2a; }
+    .ot-close:disabled { opacity: .5; cursor: not-allowed; }
+
+    .ot-pulse { animation: otPulse 1.5s ease-in-out infinite; }
+    @keyframes otPulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+  `;
+  document.head.appendChild(s);
+})();
+
+function showOrderTracker(order) {
+  let overlay = document.getElementById('order-tracker-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'order-tracker-overlay';
+    overlay.innerHTML = `
+      <div id="order-tracker">
+        <div class="ot-header">
+          <span class="ot-icon" id="ot-icon">✅</span>
+          <div class="ot-title">ORDER TRACKER</div>
+          <div class="ot-order-id" id="ot-order-id"></div>
+        </div>
+        <div class="ot-steps" id="ot-steps"></div>
+        <div class="ot-items" id="ot-items"></div>
+        <button class="ot-close" id="ot-close-btn" onclick="closeOrderTracker()">Close</button>
+      </div>`;
+    document.body.appendChild(overlay);
+  }
+
+  updateTrackerUI(order);
+  overlay.classList.add('show');
+}
+
+function updateTrackerUI(order) {
+  const currentIdx = STATUS_STEPS.indexOf(order.status);
+  const info = STATUS_LABELS[order.status] || STATUS_LABELS.received;
+
+  document.getElementById('ot-icon').textContent    = info.icon;
+  document.getElementById('ot-order-id').textContent = `Order #${order.id} • ${order.note ? order.note : ''}`;
+
+  // Steps
+  document.getElementById('ot-steps').innerHTML = STATUS_STEPS.map((s, i) => {
+    const stepInfo = STATUS_LABELS[s];
+    let cls = '';
+    if (i < currentIdx)  cls = 'done';
+    if (i === currentIdx) cls = 'active' + (s !== 'delivered' ? ' ot-pulse' : '');
+    return `
+      <div class="ot-step ${cls}">
+        <span class="ot-step-icon">${stepInfo.icon}</span>
+        <div class="ot-step-info">
+          <div class="ot-step-label">${stepInfo.label}</div>
+          ${i === currentIdx ? `<div class="ot-step-desc">${stepInfo.desc}</div>` : ''}
+        </div>
+        <span class="ot-step-tick">✓</span>
+      </div>`;
+  }).join('');
+
+  // Items
+  const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]');
+  document.getElementById('ot-items').innerHTML = `
+    <strong>Your order:</strong>
+    <ul>${items.map(i => `<li>${i.name} — Ksh ${i.price.toLocaleString()}</li>`).join('')}</ul>
+    <div style="margin-top:.4rem;font-weight:700;color:#0f2318">Total: Ksh ${order.total.toLocaleString()}</div>`;
+
+  // Allow close only when delivered
+  const closeBtn = document.getElementById('ot-close-btn');
+  if (closeBtn) {
+    if (order.status === 'delivered') {
+      closeBtn.disabled = false;
+      closeBtn.textContent = 'Close — Enjoy your meal! 🍽️';
+    } else {
+      closeBtn.disabled = false; // allow close anytime but show status
+      closeBtn.textContent = 'Minimize (tracking continues)';
+    }
+  }
+}
+
+function subscribeOrderUpdates(orderId) {
+  if (!customerSocket) return;
+  customerSocket.on('order:updated', (order) => {
+    if (order.id !== orderId) return;
+    updateTrackerUI(order);
+    // Re-show if minimized
+    const overlay = document.getElementById('order-tracker-overlay');
+    if (overlay) overlay.classList.add('show');
+  });
+}
+
+function closeOrderTracker() {
+  const overlay = document.getElementById('order-tracker-overlay');
+  if (overlay) overlay.classList.remove('show');
+}
+window.closeOrderTracker = closeOrderTracker;

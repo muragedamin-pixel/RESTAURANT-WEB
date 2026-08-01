@@ -288,15 +288,7 @@
     </div>
   </div>
 
-  <!-- ORDER SUCCESS MODAL -->
-  <div class="modal-overlay" id="order-modal">
-    <div class="modal-box" style="text-align:center">
-      <div style="font-size:3rem;margin-bottom:1rem">🍽️</div>
-      <h3>Order Placed!</h3>
-      <p style="margin:1rem 0;color:var(--text-muted)">Your order has been sent to the kitchen. Estimated time: <strong>20–30 minutes</strong>.</p>
-      <button class="btn-primary" onclick="document.getElementById('order-modal').classList.remove('open')">Done</button>
-    </div>
-  </div>
+  <!-- ORDER TRACKER (injected by restaurant.js) -->
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="restaurant.js"></script>

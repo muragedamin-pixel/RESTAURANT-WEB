@@ -75,11 +75,12 @@ router.patch('/:id/status', (req, res) => {
   const order  = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
   const parsed = { ...order, items: JSON.parse(order.items) };
 
-  // 🔔 Broadcast status change to all staff rooms
+  // 🔔 Broadcast status change to all staff rooms + customer room
   const io = getIO(req);
   io.to('kitchen').emit('order:updated', parsed);
   io.to('waiter').emit('order:updated', parsed);
   io.to('manager').emit('order:updated', parsed);
+  io.to('customer').emit('order:updated', parsed);  // customer tracker
 
   // 🔔 Extra alert to waiter when order is ready
   if (status === 'ready') {
