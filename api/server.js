@@ -59,8 +59,8 @@ app.use('/api/staff',
   staffRouter
 );
 
-// Orders (customer-facing POST kept public with auth)
-app.post('/api/orders',               authenticate,                                        ordersRouter);
+// Orders (customer POST is public, staff routes require auth)
+app.post('/api/orders',               ordersRouter);
 app.get('/api/orders',                authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
 app.get('/api/orders/:id',            authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
 app.patch('/api/orders/:id/status',   authenticate, requireRole('kitchen','waiter','manager'), ordersRouter);
