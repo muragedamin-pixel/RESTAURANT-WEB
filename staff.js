@@ -180,21 +180,25 @@ function initKitchenSocket() {
     showLoginPopup(data);
   });
 
-  // New order arrives → add to received column
+  // New order arrives → popup + add to received column
   socket.on('order:new', (order) => {
     playAlert();
-    toast(`🔔 New order #${order.id} — ${order.items.length} item(s)`, 'info');
+    const items = order.items.map(i => `• ${i.name} — Ksh ${i.price.toLocaleString()}`).join('<br>');
+    showEventPopup({
+      icon:     '🔔',
+      title:    'New Order',
+      headline: `Order #${order.id}`,
+      details:  `${items}${order.note ? `<br><em>📝 ${order.note}</em>` : ''}<br><strong>Total: Ksh ${order.total.toLocaleString()}</strong>`
+    });
     kitchenOrders.received.unshift(order);
     renderKitchenBoard();
   });
 
   // Any order status change → re-sort
   socket.on('order:updated', (order) => {
-    // Remove from all columns
     ['received','preparing','ready','delivered'].forEach(s => {
       kitchenOrders[s] = (kitchenOrders[s] || []).filter(o => o.id !== order.id);
     });
-    // Place in correct column (kitchen only cares about received/preparing/ready)
     if (['received','preparing','ready'].includes(order.status)) {
       kitchenOrders[order.status].unshift(order);
       toast(`Order #${order.id} → ${order.status}`);
@@ -293,27 +297,38 @@ function initWaiterSocket() {
     showLoginPopup(data);
   });
 
-  // Kitchen marked order ready — alert waiter
+  // Kitchen marked order ready — popup alert waiter
   socket.on('order:ready', (order) => {
     playAlert();
-    toast(`✅ Order #${order.id} is ready to serve!`, 'success');
+    const items = order.items.map(i => `• ${i.name}`).join('<br>');
+    showEventPopup({
+      icon:     '✅',
+      title:    'Order Ready to Serve',
+      headline: `Order #${order.id}`,
+      details:  `${items}<br><strong>Ksh ${order.total.toLocaleString()}</strong>`
+    });
     if (!readyOrders.find(o => o.id === order.id)) {
       readyOrders.unshift(order);
       renderWaiterBoard();
     }
   });
 
-  // Any order update (e.g. delivered by another waiter tab)
+  // Any order update
   socket.on('order:updated', (order) => {
     readyOrders = readyOrders.filter(o => o.id !== order.id);
     if (order.status === 'ready') readyOrders.unshift(order);
     renderWaiterBoard();
   });
 
-  // New table booking
+  // New table booking — popup
   socket.on('booking:table:new', (booking) => {
     playAlert();
-    toast(`📋 New table booking from ${booking.name}`, 'info');
+    showEventPopup({
+      icon:     '📋',
+      title:    'New Table Booking',
+      headline: booking.name,
+      details:  `📅 ${booking.date} at ${booking.time}<br>👥 ${booking.guests} guests • ${booking.seating}<br>📞 ${booking.phone}`
+    });
     allTableBookings.unshift(booking);
     renderWaiterBoard();
   });
@@ -472,6 +487,95 @@ async function refreshManager() {
     renderManagerBoard();
   } catch (e) { console.error('Manager refresh:', e); }
 }
+
+// ── EVENT POPUP NOTIFICATION ──
+(function injectEventPopupStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    #event-popup-overlay {
+      position: fixed; inset: 0; z-index: 9998;
+      background: rgba(15,35,24,.6); backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s ease;
+    }
+    #event-popup-overlay.show { opacity: 1; pointer-events: all; }
+
+    #event-popup {
+      background: var(--cream, #faf6ee);
+      border: 2px solid var(--gold, #c9a84c);
+      border-radius: 16px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.5);
+      width: 100%; max-width: 400px; margin: 1rem;
+      padding: 2rem 2rem 1.5rem;
+      text-align: center;
+      transform: translateY(24px) scale(.96);
+      transition: transform .3s ease;
+    }
+    #event-popup-overlay.show #event-popup { transform: translateY(0) scale(1); }
+
+    .ep-icon  { font-size: 3rem; margin-bottom: .5rem; display: block; }
+    .ep-title {
+      font-family: 'Cinzel', serif; font-size: .9rem;
+      letter-spacing: .15em; color: var(--text-muted, #6a5a4a);
+      text-transform: uppercase; margin-bottom: .4rem;
+    }
+    .ep-headline {
+      font-family: 'Cormorant Garamond', serif; font-size: 1.6rem;
+      font-weight: 700; color: var(--green-dark, #0f2318);
+      margin-bottom: .5rem;
+    }
+    .ep-details {
+      font-size: .82rem; color: var(--text-muted, #6a5a4a);
+      line-height: 1.6; margin-bottom: 1.4rem;
+      background: rgba(15,35,24,.05); border-radius: 8px; padding: .7rem 1rem;
+    }
+    .ep-close {
+      background: var(--green-dark, #0f2318); color: var(--gold, #c9a84c);
+      border: 1px solid var(--gold, #c9a84c); border-radius: 6px;
+      padding: .55rem 2rem; font-size: .8rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase; cursor: pointer;
+      transition: background .2s;
+    }
+    .ep-close:hover { background: var(--green-light, #2a5a3a); }
+  `;
+  document.head.appendChild(style);
+})();
+
+function showEventPopup({ icon, title, headline, details }) {
+  let overlay = document.getElementById('event-popup-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'event-popup-overlay';
+    overlay.innerHTML = `
+      <div id="event-popup">
+        <span class="ep-icon"  id="ep-icon"></span>
+        <div class="ep-title"  id="ep-title"></div>
+        <div class="ep-headline" id="ep-headline"></div>
+        <div class="ep-details"  id="ep-details"></div>
+        <button class="ep-close" onclick="closeEventPopup()">Got it</button>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeEventPopup(); });
+  }
+
+  document.getElementById('ep-icon').textContent     = icon;
+  document.getElementById('ep-title').textContent    = title;
+  document.getElementById('ep-headline').textContent = headline;
+  document.getElementById('ep-details').innerHTML    = details;
+
+  overlay.classList.add('show');
+
+  // Auto-dismiss after 8 seconds
+  clearTimeout(overlay._autoClose);
+  overlay._autoClose = setTimeout(closeEventPopup, 8000);
+}
+
+function closeEventPopup() {
+  const overlay = document.getElementById('event-popup-overlay');
+  if (overlay) overlay.classList.remove('show');
+}
+window.closeEventPopup = closeEventPopup;
 
 // ── STAFF LOGIN POPUP MODAL ──
 (function injectLoginPopupStyles() {
@@ -651,7 +755,13 @@ function initManagerSocket() {
 
   socket.on('order:new', (order) => {
     playAlert();
-    toast(`🔔 New order #${order.id} — Ksh ${order.total.toLocaleString()}`, 'info');
+    const items = order.items.map(i => `• ${i.name} — Ksh ${i.price.toLocaleString()}`).join('<br>');
+    showEventPopup({
+      icon:     '🔔',
+      title:    'New Order',
+      headline: `Order #${order.id}`,
+      details:  `${items}${order.note ? `<br><em>📝 ${order.note}</em>` : ''}<br><strong>Total: Ksh ${order.total.toLocaleString()}</strong>`
+    });
     allOrders.unshift(order);
     renderManagerBoard();
   });
@@ -665,7 +775,12 @@ function initManagerSocket() {
 
   socket.on('booking:table:new', (booking) => {
     playAlert();
-    toast(`📋 New table booking — ${booking.name}`, 'info');
+    showEventPopup({
+      icon:     '📋',
+      title:    'New Table Booking',
+      headline: booking.name,
+      details:  `📅 ${booking.date} at ${booking.time}<br>👥 ${booking.guests} guests • ${booking.seating}<br>📞 ${booking.phone}`
+    });
     allMgTables.unshift(booking);
     renderManagerBoard();
   });
@@ -678,7 +793,12 @@ function initManagerSocket() {
 
   socket.on('booking:room:new', (booking) => {
     playAlert();
-    toast(`🛏️ New room booking — ${booking.name}`, 'info');
+    showEventPopup({
+      icon:     '🛏️',
+      title:    'New Room Booking',
+      headline: booking.name,
+      details:  `🛏️ ${booking.room_name}<br>📅 ${booking.check_in} → ${booking.check_out}<br>👥 ${booking.guests} guest(s) • 📞 ${booking.phone}<br><strong>Ksh ${(booking.total_cost || booking.price).toLocaleString()}</strong>`
+    });
     allMgRooms.unshift(booking);
     renderManagerBoard();
   });
