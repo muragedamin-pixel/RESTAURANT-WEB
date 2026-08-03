@@ -105,6 +105,18 @@
         <h2>Your Order</h2>
       </div>
       <div class="order-box">
+        <!-- Auth nudge — hidden when logged in -->
+        <div id="order-auth-nudge" style="
+          background: #fffdf5; border: 1.5px solid #c9a84c; border-radius: 10px;
+          padding: 1rem 1.2rem; margin-bottom: 1rem; text-align: center;
+          font-family: 'Lato', sans-serif; font-size: .85rem; color: #6a5a4a; line-height: 1.6;
+        ">
+          🔐 <strong style="color:#0f2318">Sign in to place an order.</strong><br>
+          <a href="login.html" style="color:#c9a84c;font-weight:700;text-decoration:none">Sign In</a>
+          &nbsp;or&nbsp;
+          <a href="login.html#register" style="color:#c9a84c;font-weight:700;text-decoration:none">Create an Account</a>
+          — it only takes a moment.
+        </div>
         <div class="order-items" id="order-items"><p class="empty-msg">No items yet. Add from the menu above.</p></div>
         <div class="order-footer" id="order-footer" style="display:none">
           <div class="order-total">Total: <strong id="order-total">Ksh 0</strong></div>
@@ -292,40 +304,5 @@
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="restaurant.js"></script>
-  <script>
-    // ── NAV AUTH UI ──
-    (function() {
-      const user  = JSON.parse(localStorage.getItem('rr_user') || 'null');
-      const token = localStorage.getItem('rr_token');
-      const area  = document.getElementById('nav-auth-area');
-      if (!area) return;
-
-      if (user && token) {
-        // Logged in — show name + sign out
-        area.innerHTML = `
-          <span style="font-size:.78rem;color:rgba(250,246,238,.65);white-space:nowrap">
-            👤 ${user.name}
-          </span>
-          <button onclick="localStorage.removeItem('rr_token');localStorage.removeItem('rr_user');location.reload()"
-            style="padding:.3rem .7rem;border:1px solid rgba(201,168,76,.4);border-radius:4px;
-                   background:transparent;color:var(--gold);font-size:.72rem;font-weight:700;
-                   letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-left:.5rem">
-            Sign Out
-          </button>`;
-      } else {
-        // Not logged in — show Login button
-        area.innerHTML = `
-          <a href="login.html"
-            style="padding:.45rem 1.1rem;border:1.5px solid var(--gold);border-radius:2px;
-                   color:var(--gold);font-size:.78rem;font-weight:700;letter-spacing:.1em;
-                   text-transform:uppercase;text-decoration:none;white-space:nowrap;
-                   transition:all .2s"
-            onmouseover="this.style.background='var(--gold)';this.style.color='var(--green-dark)'"
-            onmouseout="this.style.background='transparent';this.style.color='var(--gold)'">
-            Login
-          </a>`;
-      }
-    })();
-  </script>
 </body>
 </html>

@@ -1,11 +1,13 @@
 const express = require('express');
 const router  = express.Router();
 const db      = require('../db');
+const { authenticate, requireRole } = require('../middleware/auth');
 
-// Helper — get io from app
 function getIO(req) { return req.app.get('io'); }
 
-// POST /api/orders — place a new order
+// ══════════════════════════════════════════
+//  POST /api/orders — place a new order (customer must be logged in)
+// ══════════════════════════════════════════
 router.post('/', (req, res) => {
   const { items, note } = req.body;
 
@@ -18,24 +20,54 @@ router.post('/', (req, res) => {
     }
   }
 
-  const total  = items.reduce((sum, i) => sum + i.price, 0);
-  const result = db.prepare(
-    'INSERT INTO orders (items, total, note) VALUES (?, ?, ?)'
-  ).run(JSON.stringify(items), total, note || '');
+  const total   = items.reduce((sum, i) => sum + i.price, 0);
+  const user_id = req.user ? req.user.id : null;
 
-  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(result.lastInsertRowid);
+  const result = db.prepare(
+    'INSERT INTO orders (user_id, items, total, note) VALUES (?, ?, ?, ?)'
+  ).run(user_id, JSON.stringify(items), total, note || '');
+
+  const order  = db.prepare('SELECT * FROM orders WHERE id = ?').get(result.lastInsertRowid);
   const parsed = { ...order, items: JSON.parse(order.items) };
 
-  // 🔔 Notify kitchen + manager of new order
+  // 🔔 Notify all staff rooms of new order in real time
   const io = getIO(req);
   io.to('kitchen').emit('order:new', parsed);
+  io.to('waiter').emit('order:new', parsed);
   io.to('manager').emit('order:new', parsed);
 
   res.status(201).json({ message: 'Order placed successfully', order: parsed });
 });
 
-// GET /api/orders
-router.get('/', (req, res) => {
+// ══════════════════════════════════════════
+//  GET /api/orders/my — customer's own orders
+// ══════════════════════════════════════════
+router.get('/my', authenticate, (req, res) => {
+  const rows = db.prepare(
+    'SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC'
+  ).all(req.user.id);
+  res.json(rows.map(o => ({ ...o, items: JSON.parse(o.items) })));
+});
+
+// ══════════════════════════════════════════
+//  GET /api/orders/:id — get single order (owner or staff)
+// ══════════════════════════════════════════
+router.get('/:id', authenticate, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+
+  const staffRoles = ['kitchen', 'waiter', 'manager'];
+  if (!staffRoles.includes(req.user.role) && order.user_id !== req.user.id) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+
+  res.json({ ...order, items: JSON.parse(order.items) });
+});
+
+// ══════════════════════════════════════════
+//  GET /api/orders — all orders (staff only)
+// ══════════════════════════════════════════
+router.get('/', authenticate, requireRole('kitchen', 'waiter', 'manager'), (req, res) => {
   const { status } = req.query;
   let rows;
 
@@ -51,15 +83,37 @@ router.get('/', (req, res) => {
   res.json(rows.map(o => ({ ...o, items: JSON.parse(o.items) })));
 });
 
-// GET /api/orders/:id
-router.get('/:id', (req, res) => {
+// ══════════════════════════════════════════
+//  DELETE /api/orders/:id — cancel own order (only if still 'received')
+// ══════════════════════════════════════════
+router.delete('/:id', authenticate, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
   if (!order) return res.status(404).json({ error: 'Order not found' });
-  res.json({ ...order, items: JSON.parse(order.items) });
+
+  const staffRoles = ['kitchen', 'waiter', 'manager'];
+  if (!staffRoles.includes(req.user.role) && order.user_id !== req.user.id) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+
+  // Customers can only cancel while still in 'received' state
+  if (!staffRoles.includes(req.user.role) && order.status !== 'received') {
+    return res.status(400).json({ error: 'Cannot cancel — order is already being prepared' });
+  }
+
+  db.prepare('DELETE FROM orders WHERE id = ?').run(req.params.id);
+
+  const io = getIO(req);
+  io.to('kitchen').emit('order:cancelled', { id: parseInt(req.params.id) });
+  io.to('waiter').emit('order:cancelled',  { id: parseInt(req.params.id) });
+  io.to('manager').emit('order:cancelled', { id: parseInt(req.params.id) });
+
+  res.json({ message: 'Order cancelled successfully' });
 });
 
-// PATCH /api/orders/:id/status
-router.patch('/:id/status', (req, res) => {
+// ══════════════════════════════════════════
+//  PATCH /api/orders/:id/status — update order status (staff only)
+// ══════════════════════════════════════════
+router.patch('/:id/status', authenticate, requireRole('kitchen', 'waiter', 'manager'), (req, res) => {
   const { status } = req.body;
   const allowed = ['received', 'preparing', 'ready', 'delivered'];
 
@@ -80,7 +134,7 @@ router.patch('/:id/status', (req, res) => {
   io.to('kitchen').emit('order:updated', parsed);
   io.to('waiter').emit('order:updated', parsed);
   io.to('manager').emit('order:updated', parsed);
-  io.to('customer').emit('order:updated', parsed);  // customer tracker
+  io.to('customer').emit('order:updated', parsed);
 
   // 🔔 Extra alert to waiter when order is ready
   if (status === 'ready') {

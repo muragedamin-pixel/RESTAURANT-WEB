@@ -23,6 +23,7 @@ db.exec(`
 db.exec(`
   CREATE TABLE IF NOT EXISTS orders (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id      INTEGER,
     items        TEXT    NOT NULL,   -- JSON array of {name, price}
     total        INTEGER NOT NULL,
     note         TEXT    DEFAULT '',
@@ -32,10 +33,16 @@ db.exec(`
   );
 `);
 
+// Add user_id column to orders if it doesn't exist yet (migration)
+try {
+  db.exec(`ALTER TABLE orders ADD COLUMN user_id INTEGER`);
+} catch (_) { /* column already exists — ignore */ }
+
 // ── TABLE BOOKINGS TABLE ──
 db.exec(`
   CREATE TABLE IF NOT EXISTS table_bookings (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER,
     name        TEXT    NOT NULL,
     phone       TEXT    NOT NULL,
     date        TEXT    NOT NULL,
@@ -48,10 +55,16 @@ db.exec(`
   );
 `);
 
+// Add user_id column to table_bookings if it doesn't exist yet (migration)
+try {
+  db.exec(`ALTER TABLE table_bookings ADD COLUMN user_id INTEGER`);
+} catch (_) { /* column already exists — ignore */ }
+
 // ── ROOM BOOKINGS TABLE ──
 db.exec(`
   CREATE TABLE IF NOT EXISTS room_bookings (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER,
     room_name   TEXT    NOT NULL,
     price       INTEGER NOT NULL,
     name        TEXT    NOT NULL,
@@ -64,6 +77,11 @@ db.exec(`
     created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 `);
+
+// Add user_id column to room_bookings if it doesn't exist yet (migration)
+try {
+  db.exec(`ALTER TABLE room_bookings ADD COLUMN user_id INTEGER`);
+} catch (_) { /* column already exists — ignore */ }
 
 // ── GUEST CODES TABLE ──
 db.exec(`

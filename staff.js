@@ -205,6 +205,15 @@ function initKitchenSocket() {
     }
     renderKitchenBoard();
   });
+
+  // Customer cancelled order — remove from board immediately
+  socket.on('order:cancelled', ({ id }) => {
+    ['received','preparing','ready','delivered'].forEach(s => {
+      kitchenOrders[s] = (kitchenOrders[s] || []).filter(o => o.id !== id);
+    });
+    toast(`Order #${id} was cancelled`);
+    renderKitchenBoard();
+  });
 }
 
 // ════════════════════════════════════════════
@@ -297,6 +306,18 @@ function initWaiterSocket() {
     showLoginPopup(data);
   });
 
+  // New order placed by customer — show popup alert to waiter
+  socket.on('order:new', (order) => {
+    playAlert();
+    const items = order.items.map(i => `• ${i.name} — Ksh ${i.price.toLocaleString()}`).join('<br>');
+    showEventPopup({
+      icon:     '🔔',
+      title:    'New Order Placed',
+      headline: `Order #${order.id}`,
+      details:  `${items}${order.note ? `<br><em>📝 ${order.note}</em>` : ''}<br><strong>Total: Ksh ${order.total.toLocaleString()}</strong>`
+    });
+  });
+
   // Kitchen marked order ready — popup alert waiter
   socket.on('order:ready', (order) => {
     playAlert();
@@ -317,6 +338,13 @@ function initWaiterSocket() {
   socket.on('order:updated', (order) => {
     readyOrders = readyOrders.filter(o => o.id !== order.id);
     if (order.status === 'ready') readyOrders.unshift(order);
+    renderWaiterBoard();
+  });
+
+  // Customer cancelled order — remove from ready list if it was there
+  socket.on('order:cancelled', ({ id }) => {
+    readyOrders = readyOrders.filter(o => o.id !== id);
+    toast(`Order #${id} was cancelled`);
     renderWaiterBoard();
   });
 
@@ -770,6 +798,13 @@ function initManagerSocket() {
     const idx = allOrders.findIndex(o => o.id === order.id);
     if (idx !== -1) allOrders[idx] = order; else allOrders.unshift(order);
     toast(`Order #${order.id} → ${order.status}`);
+    renderManagerBoard();
+  });
+
+  // Customer cancelled order — remove from list
+  socket.on('order:cancelled', ({ id }) => {
+    allOrders = allOrders.filter(o => o.id !== id);
+    toast(`Order #${id} was cancelled`);
     renderManagerBoard();
   });
 

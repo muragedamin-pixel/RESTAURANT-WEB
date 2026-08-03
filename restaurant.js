@@ -2,14 +2,25 @@
 const API_BASE   = 'https://real-restaurant-api-production.up.railway.app/api';
 const SOCKET_URL = 'https://real-restaurant-api-production.up.railway.app';
 
-// ── CUSTOMER SOCKET (optional live feedback) ──
+// ── CUSTOMER SOCKET ──
+// Initialized after DOM is ready to ensure io CDN is loaded
 let customerSocket = null;
-try {
-  if (typeof io !== 'undefined') {
-    customerSocket = io(SOCKET_URL, { transports: ['websocket','polling'] });
+
+function initCustomerSocket() {
+  if (typeof io === 'undefined') return;
+  if (customerSocket) return; // already connected
+
+  customerSocket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+
+  customerSocket.on('connect', () => {
     customerSocket.emit('join', 'customer');
-  }
-} catch(_) {}
+    console.log('⚡ Customer socket connected');
+  });
+
+  customerSocket.on('disconnect', () => {
+    console.warn('Customer socket disconnected');
+  });
+}
 
 // ── AUTO-VERIFY QR CODE ──
 // If URL has ?code=XXXXXXXX, verify it and auto-login the customer
@@ -62,10 +73,118 @@ function showWelcomeToast(name, table) {
 }
 
 
+// ── AUTH HELPERS ──
+function getCustomerToken() { return localStorage.getItem('rr_token'); }
+function getCustomerUser()  { return JSON.parse(localStorage.getItem('rr_user') || 'null'); }
+function isLoggedIn()       { const u = getCustomerUser(); return !!getCustomerToken() && !!u; }
+
+// ── LOGIN PROMPT MODAL ──
+(function injectAuthPromptStyles() {
+  const s = document.createElement('style');
+  s.textContent = `
+    #auth-prompt-overlay {
+      position: fixed; inset: 0; z-index: 9000;
+      background: rgba(15,35,24,.75); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    #auth-prompt-overlay.show { opacity: 1; pointer-events: all; }
+    #auth-prompt {
+      background: #faf6ee; border: 2px solid #c9a84c; border-radius: 16px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.5);
+      width: 100%; max-width: 400px; margin: 1rem;
+      padding: 2rem; text-align: center;
+      transform: translateY(20px) scale(.97); transition: transform .3s;
+    }
+    #auth-prompt-overlay.show #auth-prompt { transform: translateY(0) scale(1); }
+    .ap-icon  { font-size: 2.8rem; display: block; margin-bottom: .6rem; }
+    .ap-title { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: .2em;
+                color: #0f2318; text-transform: uppercase; margin-bottom: .4rem; }
+    .ap-desc  { font-size: .85rem; color: #6a5a4a; margin-bottom: 1.5rem; line-height: 1.6; }
+    .ap-btns  { display: flex; gap: .8rem; justify-content: center; }
+    .ap-btn   { flex: 1; padding: .75rem; border-radius: 6px; font-size: .8rem;
+                font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+                cursor: pointer; transition: all .2s; border: none; }
+    .ap-btn-login { background: #0f2318; color: #c9a84c; border: 1px solid #c9a84c; }
+    .ap-btn-login:hover { background: #1a3a2a; }
+    .ap-btn-cancel { background: transparent; color: #6a5a4a; border: 1px solid #e0d8c8; }
+    .ap-btn-cancel:hover { border-color: #6a5a4a; color: #0f2318; }
+  `;
+  document.head.appendChild(s);
+})();
+
+function showAuthPrompt() {
+  let overlay = document.getElementById('auth-prompt-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'auth-prompt-overlay';
+    overlay.innerHTML = `
+      <div id="auth-prompt">
+        <span class="ap-icon">🔐</span>
+        <div class="ap-title">Sign In Required</div>
+        <div class="ap-desc">You need to be logged in to place an order.<br>It only takes a moment to sign in or create an account.</div>
+        <div class="ap-btns">
+          <button class="ap-btn ap-btn-login" onclick="window.location.href='login.html'">Sign In / Register</button>
+          <button class="ap-btn ap-btn-cancel" onclick="closeAuthPrompt()">Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeAuthPrompt(); });
+  }
+  overlay.classList.add('show');
+}
+
+function closeAuthPrompt() {
+  const overlay = document.getElementById('auth-prompt-overlay');
+  if (overlay) overlay.classList.remove('show');
+}
+
+// ── UPDATE NAV TO SHOW LOGGED-IN STATE ──
+function updateNavAuth() {
+  const user = getCustomerUser();
+  const navAuthEl = document.getElementById('nav-auth-area');
+  if (!navAuthEl) return;
+  if (user) {
+    navAuthEl.innerHTML = `
+      <span style="font-size:.78rem;color:rgba(250,246,238,.7)">👤 ${user.name}</span>
+      <button onclick="customerLogout()" style="padding:.3rem .8rem;border:1px solid rgba(201,168,76,.4);
+        border-radius:4px;background:transparent;color:var(--gold);font-size:.72rem;font-weight:700;
+        letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Sign Out</button>`;
+  } else {
+    navAuthEl.innerHTML = `
+      <a href="login.html" style="padding:.45rem 1.1rem;border:1.5px solid var(--gold);border-radius:2px;
+        font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+        color:var(--gold);text-decoration:none">Sign In</a>`;
+  }
+}
+
+function customerLogout() {
+  localStorage.removeItem('rr_token');
+  localStorage.removeItem('rr_user');
+  localStorage.removeItem('rr_table');
+  updateNavAuth();
+  updateOrderBoxAuthState();
+}
+
+// Show/hide the auth nudge inside the order box
+function updateOrderBoxAuthState() {
+  const nudge = document.getElementById('order-auth-nudge');
+  if (!nudge) return;
+  nudge.style.display = isLoggedIn() ? 'none' : 'block';
+}
+
+// ── SPLASH ──
 document.getElementById('splash-btn').addEventListener('click', () => {
   document.getElementById('splash').classList.add('hidden');
   const site = document.getElementById('site');
   site.classList.add('visible');
+});
+
+// ── INIT AUTH STATE ON LOAD ──
+document.addEventListener('DOMContentLoaded', () => {
+  updateNavAuth();
+  updateOrderBoxAuthState();
+  initCustomerSocket();
 });
 
 // ── HAMBURGER ──
@@ -179,9 +298,15 @@ function removeOrderItem(i) {
   renderOrder();
 }
 
-// Place order — sends to API
+// Place order — requires login
 async function placeOrder() {
   if (!orderCart.length) return;
+
+  // Block if not logged in
+  if (!isLoggedIn()) {
+    showAuthPrompt();
+    return;
+  }
 
   // Pre-fill table from QR session if available
   const tableLabel = localStorage.getItem('rr_table');
@@ -196,9 +321,8 @@ async function placeOrder() {
   btn.disabled    = true;
 
   try {
-    const token = localStorage.getItem('rr_token');
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const token = getCustomerToken();
+    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 
     const res  = await fetch(`${API_BASE}/orders`, {
       method:  'POST',
@@ -490,12 +614,22 @@ function updateTrackerUI(order) {
 
 function subscribeOrderUpdates(orderId) {
   if (!customerSocket) return;
+
+  // Remove any previous listener to avoid stacking duplicates
+  customerSocket.off('order:updated');
+  customerSocket.off('order:cancelled');
+
   customerSocket.on('order:updated', (order) => {
     if (order.id !== orderId) return;
     updateTrackerUI(order);
-    // Re-show if minimized
+    // Re-show tracker if it was minimized
     const overlay = document.getElementById('order-tracker-overlay');
     if (overlay) overlay.classList.add('show');
+  });
+
+  customerSocket.on('order:cancelled', ({ id }) => {
+    if (id !== orderId) return;
+    closeOrderTracker();
   });
 }
 

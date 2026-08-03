@@ -59,21 +59,18 @@ app.use('/api/staff',
   staffRouter
 );
 
-// Orders — POST is public (customers order without login), GET/PATCH require staff auth
+// Orders — POST requires login (customer or staff), GET/PATCH require staff auth
 app.use('/api/orders', (req, res, next) => {
-  if (req.method === 'POST') return next();           // public
-  authenticate(req, res, () => requireRole('kitchen','waiter','manager')(req, res, next));
+  if (req.method === 'POST') {
+    // Must be logged in as customer, or staff (waiter/kitchen/manager)
+    return authenticate(req, res, () => requireRole('customer','kitchen','waiter','manager')(req, res, next));
+  }
+  // All other methods (GET, PATCH, DELETE) — auth is handled inside the router
+  next();
 }, ordersRouter);
 
-// Bookings — POST public, GET/PATCH staff only
-app.post('/api/bookings/table',                                                            bookingsRouter);
-app.post('/api/bookings/room',                                                             bookingsRouter);
-app.get('/api/bookings/table',              authenticate, requireRole('waiter','manager'), bookingsRouter);
-app.get('/api/bookings/table/:id',          authenticate, requireRole('waiter','manager'), bookingsRouter);
-app.patch('/api/bookings/table/:id/status', authenticate, requireRole('waiter','manager'), bookingsRouter);
-app.get('/api/bookings/room',               authenticate, requireRole('manager'),          bookingsRouter);
-app.get('/api/bookings/room/:id',           authenticate, requireRole('manager'),          bookingsRouter);
-app.patch('/api/bookings/room/:id/status',  authenticate, requireRole('manager'),          bookingsRouter);
+// Bookings — all auth handled inside the router per-route
+app.use('/api/bookings', bookingsRouter);
 
 // ── HEALTH ──
 app.get('/api/health', (req, res) => {
