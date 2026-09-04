@@ -25,21 +25,43 @@
   <main class="dashboard-main">
 
     <div class="stats-bar">
+      <div class="stat-pill"><span class="stat-num" id="stat-total-orders">0</span><span class="stat-label">All Orders</span></div>
+      <div class="stat-pill warning"><span class="stat-num" id="stat-new-orders">0</span><span class="stat-label">New</span></div>
+      <div class="stat-pill warning"><span class="stat-num" id="stat-preparing">0</span><span class="stat-label">Preparing</span></div>
       <div class="stat-pill success"><span class="stat-num" id="stat-ready">0</span><span class="stat-label">Ready to Serve</span></div>
-      <div class="stat-pill"><span class="stat-num" id="stat-tables">0</span><span class="stat-label">Today's Bookings</span></div>
-      <div class="stat-pill warning"><span class="stat-num" id="stat-pending-tables">0</span><span class="stat-label">Pending Confirmations</span></div>
       <div class="stat-pill muted"><span class="stat-num" id="stat-delivered">0</span><span class="stat-label">Served Today</span></div>
+      <div class="stat-pill"><span class="stat-num" id="stat-tables">0</span><span class="stat-label">Table Bookings</span></div>
+      <div class="stat-pill warning"><span class="stat-num" id="stat-pending-tables">0</span><span class="stat-label">Pending Confirmations</span></div>
     </div>
 
+    <!-- All Orders — full list with status tabs -->
+    <section class="manager-section" style="margin-bottom:1.5rem;">
+      <div class="section-title-bar">
+        <h2>🧾 All Orders</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <div class="filter-tabs">
+            <button class="ftab active" onclick="waiterFilterOrders('all',this)">All</button>
+            <button class="ftab" onclick="waiterFilterOrders('received',this)">New</button>
+            <button class="ftab" onclick="waiterFilterOrders('preparing',this)">Preparing</button>
+            <button class="ftab" onclick="waiterFilterOrders('ready',this)">Ready</button>
+            <button class="ftab" onclick="waiterFilterOrders('delivered',this)">Delivered</button>
+          </div>
+          <button class="refresh-btn" onclick="refreshAll()">↺ Refresh</button>
+        </div>
+      </div>
+      <div class="order-list" id="waiter-all-orders"></div>
+    </section>
+
     <div class="waiter-grid">
+      <!-- Ready to Deliver — quick action panel -->
       <section class="waiter-section">
         <div class="section-title-bar">
           <h2>✅ Ready to Deliver</h2>
-          <button class="refresh-btn" onclick="refreshAll()">↺ Refresh</button>
         </div>
         <div class="order-list" id="ready-orders"></div>
       </section>
 
+      <!-- Table Bookings -->
       <section class="waiter-section">
         <div class="section-title-bar">
           <h2>📋 Table Bookings</h2>

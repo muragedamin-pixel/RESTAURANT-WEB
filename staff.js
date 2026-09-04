@@ -220,12 +220,48 @@ function initKitchenSocket() {
 //  WAITER DASHBOARD
 // ════════════════════════════════════════════
 let readyOrders      = [];
+let allWaiterOrders  = [];   // ← ALL orders, all statuses
 let allTableBookings = [];
+let waiterOrderFilter = 'all';
 
+// ── Render a single order card (waiter view — full detail with status-aware actions) ──
+function renderWaiterOrder(order) {
+  const items   = order.items.map(i => `<li>${i.name} — Ksh ${i.price.toLocaleString()}</li>`).join('');
+  const noteHtml = order.note ? `<div class="order-note">📝 ${order.note}</div>` : '';
+
+  let actionsHtml = '';
+  if (order.status === 'ready') {
+    actionsHtml = `<button class="action-btn btn-deliver" onclick="updateOrderStatus(${order.id},'delivered')">🍽️ Mark Delivered</button>`;
+  } else if (order.status === 'delivered') {
+    actionsHtml = `<span style="font-size:.78rem;color:var(--success);font-weight:700;">✅ Served</span>`;
+  } else {
+    // received / preparing — waiter can see but not change kitchen statuses
+    actionsHtml = `<span style="font-size:.78rem;color:var(--text-muted);">${
+      order.status === 'received' ? '⏳ Waiting for kitchen…' : '🔥 Kitchen preparing…'
+    }</span>`;
+  }
+
+  return `
+    <div class="order-card" id="order-${order.id}">
+      <div class="order-card-header">
+        <span class="order-id">Order #${order.id}</span>
+        <span style="display:flex;gap:.5rem;align-items:center;">
+          ${statusBadge(order.status)}
+          <span class="order-time">${timeAgo(order.created_at)}</span>
+        </span>
+      </div>
+      <ul class="order-items-list">${items}</ul>
+      ${noteHtml}
+      <div class="order-total">Total: Ksh ${order.total.toLocaleString()}</div>
+      <div class="order-actions">${actionsHtml}</div>
+    </div>`;
+}
+
+// Compact "ready to deliver" card (right panel quick action)
 function renderReadyOrder(order) {
   const items = order.items.map(i => `<li>${i.name}</li>`).join('');
   return `
-    <div class="order-card" id="order-${order.id}">
+    <div class="order-card" id="ready-order-${order.id}">
       <div class="order-card-header">
         <span class="order-id">Order #${order.id}</span>
         <span class="order-time">${timeAgo(order.created_at)}</span>
@@ -259,6 +295,18 @@ function renderTableBooking(b) {
 }
 
 function renderWaiterBoard(bookingFilter = 'all') {
+  // ── All Orders list (filterable) ──
+  const allOrdersEl = document.getElementById('waiter-all-orders');
+  if (allOrdersEl) {
+    const filtered = waiterOrderFilter === 'all'
+      ? allWaiterOrders
+      : allWaiterOrders.filter(o => o.status === waiterOrderFilter);
+    allOrdersEl.innerHTML = filtered.length
+      ? filtered.map(renderWaiterOrder).join('')
+      : '<div class="empty-state">No orders found</div>';
+  }
+
+  // ── Ready to Deliver panel ──
   const readyEl = document.getElementById('ready-orders');
   if (readyEl) {
     readyEl.innerHTML = readyOrders.length
@@ -266,23 +314,37 @@ function renderWaiterBoard(bookingFilter = 'all') {
       : '<div class="empty-state">No orders ready yet</div>';
   }
 
-  const filtered = bookingFilter === 'all'
+  // ── Table Bookings ──
+  const filteredBookings = bookingFilter === 'all'
     ? allTableBookings
     : allTableBookings.filter(b => b.status === bookingFilter);
   const bookEl = document.getElementById('table-bookings');
   if (bookEl) {
-    bookEl.innerHTML = filtered.length
-      ? filtered.map(renderTableBooking).join('')
+    bookEl.innerHTML = filteredBookings.length
+      ? filteredBookings.map(renderTableBooking).join('')
       : '<div class="empty-state">No bookings found</div>';
   }
 
+  // ── Stats ──
+  setEl('stat-total-orders',   allWaiterOrders.length);
+  setEl('stat-new-orders',     allWaiterOrders.filter(o => o.status === 'received').length);
+  setEl('stat-preparing',      allWaiterOrders.filter(o => o.status === 'preparing').length);
   setEl('stat-ready',          readyOrders.length);
+  setEl('stat-delivered',      allWaiterOrders.filter(o => o.status === 'delivered').length);
   setEl('stat-tables',         allTableBookings.length);
   setEl('stat-pending-tables', allTableBookings.filter(b => b.status === 'pending').length);
 }
 
+function waiterFilterOrders(filter, btn) {
+  waiterOrderFilter = filter;
+  btn.closest('.filter-tabs').querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderWaiterBoard();
+}
+
 function filterBookings(filter, btn) {
-  document.querySelectorAll('.filter-tabs .ftab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#table-bookings').forEach(() => {});
+  btn.closest('.filter-tabs').querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderWaiterBoard(filter);
 }
@@ -290,9 +352,9 @@ function filterBookings(filter, btn) {
 async function refreshWaiter() {
   try {
     const [orders, bookings] = await Promise.all([apiGet('/orders'), apiGet('/bookings/table')]);
+    allWaiterOrders  = orders;
     readyOrders      = orders.filter(o => o.status === 'ready');
     allTableBookings = bookings;
-    setEl('stat-delivered', orders.filter(o => o.status === 'delivered').length);
     renderWaiterBoard();
   } catch (e) { console.error('Waiter refresh:', e); }
 }
@@ -300,13 +362,13 @@ async function refreshWaiter() {
 function initWaiterSocket() {
   socket.emit('join', 'waiter');
 
-  // Staff login notification — all dashboards get the popup
+  // Staff login notification
   socket.on('staff:login', (data) => {
     playAlert();
     showLoginPopup(data);
   });
 
-  // New order placed by customer — show popup alert to waiter
+  // New order placed — add to all-orders list + popup
   socket.on('order:new', (order) => {
     playAlert();
     const items = order.items.map(i => `• ${i.name} — Ksh ${i.price.toLocaleString()}`).join('<br>');
@@ -316,9 +378,12 @@ function initWaiterSocket() {
       headline: `Order #${order.id}`,
       details:  `${items}${order.note ? `<br><em>📝 ${order.note}</em>` : ''}<br><strong>Total: Ksh ${order.total.toLocaleString()}</strong>`
     });
+    // Add to top of all-orders list
+    allWaiterOrders.unshift(order);
+    renderWaiterBoard();
   });
 
-  // Kitchen marked order ready — popup alert waiter
+  // Kitchen marked order ready — move to ready panel + popup
   socket.on('order:ready', (order) => {
     playAlert();
     const items = order.items.map(i => `• ${i.name}`).join('<br>');
@@ -328,27 +393,35 @@ function initWaiterSocket() {
       headline: `Order #${order.id}`,
       details:  `${items}<br><strong>Ksh ${order.total.toLocaleString()}</strong>`
     });
-    if (!readyOrders.find(o => o.id === order.id)) {
-      readyOrders.unshift(order);
-      renderWaiterBoard();
-    }
-  });
-
-  // Any order update
-  socket.on('order:updated', (order) => {
-    readyOrders = readyOrders.filter(o => o.id !== order.id);
-    if (order.status === 'ready') readyOrders.unshift(order);
+    // Update in allWaiterOrders
+    const idx = allWaiterOrders.findIndex(o => o.id === order.id);
+    if (idx !== -1) allWaiterOrders[idx] = order; else allWaiterOrders.unshift(order);
+    // Ensure it's in readyOrders
+    if (!readyOrders.find(o => o.id === order.id)) readyOrders.unshift(order);
     renderWaiterBoard();
   });
 
-  // Customer cancelled order — remove from ready list if it was there
+  // Any order status change (delivered, etc.)
+  socket.on('order:updated', (order) => {
+    // Update in allWaiterOrders
+    const idx = allWaiterOrders.findIndex(o => o.id === order.id);
+    if (idx !== -1) allWaiterOrders[idx] = order; else allWaiterOrders.unshift(order);
+    // Keep readyOrders in sync
+    readyOrders = readyOrders.filter(o => o.id !== order.id);
+    if (order.status === 'ready') readyOrders.unshift(order);
+    toast(`Order #${order.id} → ${order.status}`);
+    renderWaiterBoard();
+  });
+
+  // Order cancelled
   socket.on('order:cancelled', ({ id }) => {
-    readyOrders = readyOrders.filter(o => o.id !== id);
+    allWaiterOrders = allWaiterOrders.filter(o => o.id !== id);
+    readyOrders     = readyOrders.filter(o => o.id !== id);
     toast(`Order #${id} was cancelled`);
     renderWaiterBoard();
   });
 
-  // New table booking — popup
+  // New table booking
   socket.on('booking:table:new', (booking) => {
     playAlert();
     showEventPopup({
