@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="staff.css" />
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
+    /* ── Staff Activity ── */
     .activity-log { display: flex; flex-direction: column; gap: .6rem; padding: .5rem 0; }
     .activity-item {
       display: flex; align-items: center; gap: .9rem;
@@ -20,6 +21,236 @@
     .activity-name { font-weight: 700; font-size: .88rem; color: #0f2318; }
     .activity-role { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #6a5a4a; }
     .activity-time { font-size: .75rem; color: #6a5a4a; white-space: nowrap; }
+
+    /* ── POS Button (nav bar) ── */
+    .pos-nav-btn {
+      display: flex; align-items: center; gap: .45rem;
+      padding: .38rem 1rem;
+      background: var(--gold);
+      color: var(--green-dark);
+      border: none; border-radius: 20px;
+      font-size: .75rem; font-weight: 800;
+      letter-spacing: .1em; text-transform: uppercase;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      white-space: nowrap;
+    }
+    .pos-nav-btn:hover { background: var(--gold-light); transform: translateY(-1px); }
+    .pos-nav-btn:active { transform: translateY(0); }
+
+    /* ── POS KPI card in stats bar ── */
+    .kpi-card.pos-card {
+      background: #0f2318; border: 1.5px solid var(--gold);
+      cursor: pointer; transition: transform .15s, box-shadow .15s;
+    }
+    .kpi-card.pos-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(201,168,76,.3); }
+    .kpi-card.pos-card .kpi-num,
+    .kpi-card.pos-card .kpi-label { color: var(--gold-light); }
+
+    /* ══════════════════════════════════════════
+       POS MODAL OVERLAY
+    ══════════════════════════════════════════ */
+    #pos-overlay {
+      position: fixed; inset: 0; z-index: 9500;
+      background: rgba(10,28,18,.8);
+      backdrop-filter: blur(5px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s;
+    }
+    #pos-overlay.open { opacity: 1; pointer-events: all; }
+
+    #pos-modal {
+      background: var(--cream, #faf6ee);
+      border: 2px solid var(--gold, #c9a84c);
+      border-radius: 16px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.55);
+      width: 100%; max-width: 560px;
+      margin: 1rem;
+      display: flex; flex-direction: column;
+      max-height: 92vh;
+      transform: translateY(24px) scale(.97);
+      transition: transform .3s;
+      overflow: hidden;
+    }
+    #pos-overlay.open #pos-modal { transform: translateY(0) scale(1); }
+
+    .pos-modal-header {
+      background: var(--green-dark);
+      padding: 1.2rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 2px solid var(--gold);
+      flex-shrink: 0;
+    }
+    .pos-modal-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem; letter-spacing: .2em;
+      color: var(--gold);
+    }
+    .pos-modal-close {
+      background: transparent; border: none;
+      color: rgba(250,246,238,.6); font-size: 1.4rem;
+      cursor: pointer; line-height: 1;
+      transition: color .2s;
+    }
+    .pos-modal-close:hover { color: var(--gold); }
+
+    /* Tabs */
+    .pos-tabs {
+      display: flex; background: #f2ebe0;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .pos-tab {
+      flex: 1; padding: .75rem .5rem;
+      background: transparent; border: none;
+      font-size: .75rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text-muted); cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all .2s;
+    }
+    .pos-tab.active { color: var(--green-dark); border-bottom-color: var(--gold); }
+    .pos-tab:hover:not(.active) { background: rgba(0,0,0,.04); }
+
+    /* Panels */
+    .pos-panel { display: none; flex-direction: column; gap: 1rem; overflow-y: auto; padding: 1.4rem 1.5rem; flex: 1; }
+    .pos-panel.active { display: flex; }
+
+    /* Form rows */
+    .pos-field { display: flex; flex-direction: column; gap: .35rem; }
+    .pos-field label {
+      font-size: .72rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .pos-field input,
+    .pos-field select {
+      padding: .6rem .8rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-family: 'Lato', sans-serif;
+      font-size: .88rem; color: var(--text);
+      background: #fff;
+      transition: border-color .2s;
+      width: 100%;
+    }
+    .pos-field input:focus,
+    .pos-field select:focus { outline: none; border-color: var(--gold); }
+
+    .pos-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 480px) { .pos-row { grid-template-columns: 1fr; } }
+
+    /* Provider selector */
+    .pos-providers { display: flex; gap: .7rem; flex-wrap: wrap; }
+    .pos-provider-btn {
+      flex: 1; min-width: 110px;
+      padding: .7rem .5rem;
+      border: 2px solid var(--border);
+      border-radius: 8px; background: #fff;
+      cursor: pointer; text-align: center;
+      transition: all .2s;
+    }
+    .pos-provider-btn:hover { border-color: var(--gold); background: #fffdf5; }
+    .pos-provider-btn.selected { border-color: var(--gold); background: #fffdf5; box-shadow: 0 0 0 3px rgba(201,168,76,.2); }
+    .pos-provider-icon { font-size: 1.6rem; display: block; margin-bottom: .3rem; }
+    .pos-provider-name { font-size: .75rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--green-dark); }
+    .pos-provider-badge { font-size: .65rem; color: var(--text-muted); margin-top: .15rem; }
+
+    /* Order summary strip */
+    .pos-order-summary {
+      background: var(--green-dark);
+      border-radius: 8px; padding: .9rem 1.1rem;
+      color: var(--gold-light);
+    }
+    .pos-order-summary .pos-os-title { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; opacity: .7; margin-bottom: .5rem; }
+    .pos-order-summary .pos-os-row { display: flex; justify-content: space-between; font-size: .85rem; padding: .15rem 0; }
+    .pos-order-summary .pos-os-total { font-family: 'Cinzel', serif; font-size: 1.1rem; border-top: 1px solid rgba(201,168,76,.3); padding-top: .5rem; margin-top: .4rem; }
+
+    /* Submit button */
+    .pos-submit {
+      width: 100%; padding: .85rem;
+      background: var(--green-dark); color: var(--gold);
+      border: 1.5px solid var(--gold); border-radius: 8px;
+      font-size: .85rem; font-weight: 800;
+      letter-spacing: .12em; text-transform: uppercase;
+      cursor: pointer; transition: all .2s;
+      flex-shrink: 0;
+    }
+    .pos-submit:hover:not(:disabled) { background: #1a3a2a; }
+    .pos-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Status / error area */
+    .pos-status {
+      font-size: .82rem; text-align: center;
+      padding: .5rem; border-radius: 6px;
+      display: none;
+    }
+    .pos-status.visible { display: block; }
+    .pos-status.success { background: #eafaf1; color: #1a7a3a; border: 1px solid #a8e6c0; }
+    .pos-status.error   { background: #fdecea; color: #c0392b; border: 1px solid #f0b0a8; }
+
+    /* ── Transactions Panel ── */
+    .pos-tx-filters { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .pos-tx-filter-btn {
+      padding: .3rem .75rem;
+      border: 1px solid var(--border); border-radius: 20px;
+      background: transparent; cursor: pointer;
+      font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--text-muted); transition: all .2s;
+    }
+    .pos-tx-filter-btn.active,
+    .pos-tx-filter-btn:hover { background: var(--green-dark); color: var(--gold); border-color: var(--green-dark); }
+
+    .pos-tx-list { display: flex; flex-direction: column; gap: .65rem; max-height: 380px; overflow-y: auto; }
+    .pos-tx-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: .85rem 1rem; display: flex; flex-direction: column; gap: .4rem;
+      animation: slideIn .25s ease;
+    }
+    .pos-tx-top { display: flex; justify-content: space-between; align-items: center; }
+    .pos-tx-id { font-family: 'Cinzel', serif; font-size: .8rem; color: var(--green-dark); font-weight: 700; }
+    .pos-tx-provider {
+      font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      padding: .18rem .55rem; border-radius: 12px;
+    }
+    .pos-tx-provider.square  { background: #e6f0fb; color: #2258a5; }
+    .pos-tx-provider.toast   { background: #fef0e6; color: #c0500a; }
+    .pos-tx-provider.sumup   { background: #eaf5e6; color: #1a7a30; }
+    .pos-tx-meta { font-size: .78rem; color: var(--text-muted); display: flex; gap: .8rem; flex-wrap: wrap; }
+    .pos-tx-amount { font-family: 'Cinzel', serif; font-size: .95rem; color: var(--green-dark); }
+    .pos-tx-refund-btn {
+      align-self: flex-end; padding: .3rem .8rem;
+      background: transparent; border: 1.5px solid var(--red);
+      color: var(--red); border-radius: 4px;
+      font-size: .72rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+      cursor: pointer; transition: all .2s;
+    }
+    .pos-tx-refund-btn:hover { background: var(--red); color: #fff; }
+
+    /* ── Receipt modal (inside POS modal) ── */
+    #pos-receipt {
+      display: none; position: absolute; inset: 0;
+      background: var(--cream); z-index: 10;
+      flex-direction: column; padding: 1.5rem;
+      overflow-y: auto;
+    }
+    #pos-receipt.open { display: flex; }
+    .receipt-header { text-align: center; margin-bottom: 1rem; }
+    .receipt-logo { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--green-dark); letter-spacing: .2em; }
+    .receipt-subtitle { font-size: .75rem; color: var(--text-muted); margin-top: .2rem; }
+    .receipt-divider { border: none; border-top: 1px dashed var(--border); margin: .8rem 0; }
+    .receipt-row { display: flex; justify-content: space-between; font-size: .83rem; padding: .18rem 0; }
+    .receipt-row.bold { font-weight: 700; }
+    .receipt-row.total { font-family: 'Cinzel', serif; font-size: 1rem; border-top: 1px solid var(--border); padding-top: .5rem; margin-top: .3rem; }
+    .receipt-footer { text-align: center; font-size: .75rem; color: var(--text-muted); margin-top: 1rem; font-style: italic; }
+    .receipt-close-btn {
+      margin-top: 1rem; width: 100%; padding: .7rem;
+      background: var(--green-dark); color: var(--gold);
+      border: 1px solid var(--gold); border-radius: 6px;
+      font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="dashboard-body">
@@ -34,6 +265,8 @@
       <a href="qr-generator.html">🔲 QR Codes</a>
       <a href="staff.html">← Portal</a>
     </div>
+    <!-- 💳 POS Button in nav -->
+    <button class="pos-nav-btn" onclick="openPOS()">💳 POS</button>
     <div class="nav-clock" id="clock"></div>
   </nav>
 
@@ -46,18 +279,30 @@
       <div class="kpi-card"><div class="kpi-icon">🛏️</div><div class="kpi-data"><span class="kpi-num" id="kpi-room-bookings">0</span><span class="kpi-label">Room Bookings</span></div></div>
       <div class="kpi-card gold"><div class="kpi-icon">🏨</div><div class="kpi-data"><span class="kpi-num" id="kpi-room-revenue">Ksh 0</span><span class="kpi-label">Room Revenue</span></div></div>
       <div class="kpi-card"><div class="kpi-icon">⏳</div><div class="kpi-data"><span class="kpi-num" id="kpi-pending">0</span><span class="kpi-label">Pending Bookings</span></div></div>
+      <!-- POS Revenue KPI — clickable shortcut -->
+      <div class="kpi-card pos-card" onclick="openPOS('transactions')" title="Open POS Transactions">
+        <div class="kpi-icon">💳</div>
+        <div class="kpi-data">
+          <span class="kpi-num" id="kpi-pos-revenue">Ksh 0</span>
+          <span class="kpi-label">POS Collected</span>
+        </div>
+      </div>
     </div>
 
     <div class="manager-grid">
       <section class="manager-section">
         <div class="section-title-bar">
           <h2>🧾 All Orders</h2>
-          <div class="filter-tabs">
-            <button class="ftab active" onclick="mgFilterOrders('all',this)">All</button>
-            <button class="ftab" onclick="mgFilterOrders('received',this)">New</button>
-            <button class="ftab" onclick="mgFilterOrders('preparing',this)">Preparing</button>
-            <button class="ftab" onclick="mgFilterOrders('ready',this)">Ready</button>
-            <button class="ftab" onclick="mgFilterOrders('delivered',this)">Delivered</button>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+            <div class="filter-tabs">
+              <button class="ftab active" onclick="mgFilterOrders('all',this)">All</button>
+              <button class="ftab" onclick="mgFilterOrders('received',this)">New</button>
+              <button class="ftab" onclick="mgFilterOrders('preparing',this)">Preparing</button>
+              <button class="ftab" onclick="mgFilterOrders('ready',this)">Ready</button>
+              <button class="ftab" onclick="mgFilterOrders('delivered',this)">Delivered</button>
+            </div>
+            <!-- POS Charge button next to order list -->
+            <button class="pos-nav-btn" style="font-size:.68rem;padding:.3rem .75rem;" onclick="openPOS('checkout')">💳 Charge</button>
           </div>
         </div>
         <div class="order-list" id="all-orders"></div>
@@ -101,10 +346,524 @@
 
   </main>
 
+  <!-- ══════════════════════════════════════════
+       💳 POS MODAL
+  ══════════════════════════════════════════ -->
+  <div id="pos-overlay" onclick="closePOSOnOverlay(event)">
+    <div id="pos-modal">
+
+      <!-- Receipt sub-panel (shown after payment) -->
+      <div id="pos-receipt">
+        <div class="receipt-header">
+          <div class="receipt-logo">REAL RESTAURANT</div>
+          <div class="receipt-subtitle">Payment Receipt</div>
+        </div>
+        <hr class="receipt-divider" />
+        <div id="receipt-body"></div>
+        <hr class="receipt-divider" />
+        <div class="receipt-footer">Thank you for dining with us! 🍽️</div>
+        <button class="receipt-close-btn" onclick="closeReceipt()">← Back to POS</button>
+      </div>
+
+      <div class="pos-modal-header">
+        <span class="pos-modal-title">💳 POS CONNECTOR</span>
+        <button class="pos-modal-close" onclick="closePOS()">✕</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="pos-tabs">
+        <button class="pos-tab active" onclick="switchPOSTab('checkout', this)">Checkout</button>
+        <button class="pos-tab" onclick="switchPOSTab('transactions', this)">Transactions</button>
+      </div>
+
+      <!-- ── CHECKOUT PANEL ── -->
+      <div class="pos-panel active" id="pos-panel-checkout">
+
+        <!-- Provider selector -->
+        <div class="pos-field">
+          <label>Select POS Provider</label>
+          <div class="pos-providers">
+            <button class="pos-provider-btn selected" onclick="selectProvider('square', this)">
+              <span class="pos-provider-icon">◼</span>
+              <span class="pos-provider-name">Square</span>
+              <span class="pos-provider-badge">Card / Terminal</span>
+            </button>
+            <button class="pos-provider-btn" onclick="selectProvider('toast', this)">
+              <span class="pos-provider-icon">🍞</span>
+              <span class="pos-provider-name">Toast</span>
+              <span class="pos-provider-badge">Restaurant POS</span>
+            </button>
+            <button class="pos-provider-btn" onclick="selectProvider('sumup', this)">
+              <span class="pos-provider-icon">＋</span>
+              <span class="pos-provider-name">SumUp</span>
+              <span class="pos-provider-badge">Card Reader</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Order lookup -->
+        <div class="pos-row">
+          <div class="pos-field">
+            <label>Order ID (optional)</label>
+            <input type="number" id="pos-order-id" placeholder="e.g. 42" min="1"
+                   oninput="lookupOrderForPOS(this.value)" />
+          </div>
+          <div class="pos-field">
+            <label>Currency</label>
+            <select id="pos-currency">
+              <option value="KES">KES — Kenyan Shilling</option>
+              <option value="USD">USD — US Dollar</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Order summary (auto-filled when order ID entered) -->
+        <div class="pos-order-summary" id="pos-order-summary" style="display:none;">
+          <div class="pos-os-title">Order Summary</div>
+          <div id="pos-os-items"></div>
+          <div class="pos-os-row pos-os-total">
+            <span>Total</span>
+            <span id="pos-os-total">—</span>
+          </div>
+        </div>
+
+        <!-- Manual amount (shown when no order ID) -->
+        <div class="pos-field" id="pos-amount-field">
+          <label>Amount (in currency unit)</label>
+          <input type="number" id="pos-amount" placeholder="e.g. 1250" min="1" step="1" />
+        </div>
+
+        <!-- Tip -->
+        <div class="pos-field">
+          <label>Tip (optional, in currency unit)</label>
+          <input type="number" id="pos-tip" placeholder="e.g. 100" min="0" step="1" value="0" />
+        </div>
+
+        <!-- Provider-specific fields -->
+        <!-- Square -->
+        <div id="pos-fields-square">
+          <div class="pos-field">
+            <label>Card Nonce / Source ID <span style="font-weight:400;font-size:.68rem;">(from Square SDK)</span></label>
+            <input type="text" id="pos-square-nonce" placeholder="cnon:card-nonce-ok" />
+          </div>
+        </div>
+
+        <!-- Toast -->
+        <div id="pos-fields-toast" style="display:none;">
+          <div class="pos-row">
+            <div class="pos-field">
+              <label>Payment Type</label>
+              <select id="pos-toast-type">
+                <option value="CASH">Cash</option>
+                <option value="CREDIT_CARD">Credit Card</option>
+              </select>
+            </div>
+            <div class="pos-field">
+              <label>Card Token <span style="font-weight:400;font-size:.68rem;">(if card)</span></label>
+              <input type="text" id="pos-toast-token" placeholder="Optional for cash" />
+            </div>
+          </div>
+        </div>
+
+        <!-- SumUp -->
+        <div id="pos-fields-sumup" style="display:none;">
+          <div class="pos-field">
+            <label>Card Token <span style="font-weight:400;font-size:.68rem;">(from SumUp.js SDK)</span></label>
+            <input type="text" id="pos-sumup-token" placeholder="SumUp card token" />
+          </div>
+        </div>
+
+        <!-- Status message -->
+        <div class="pos-status" id="pos-checkout-status"></div>
+
+        <button class="pos-submit" id="pos-submit-btn" onclick="submitPOSCheckout()">
+          💳 Process Payment
+        </button>
+      </div>
+
+      <!-- ── TRANSACTIONS PANEL ── -->
+      <div class="pos-panel" id="pos-panel-transactions">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;">
+          <div class="pos-tx-filters">
+            <button class="pos-tx-filter-btn active" onclick="filterPOSTx('all',this)">All</button>
+            <button class="pos-tx-filter-btn" onclick="filterPOSTx('paid',this)">Paid</button>
+            <button class="pos-tx-filter-btn" onclick="filterPOSTx('pending',this)">Pending</button>
+            <button class="pos-tx-filter-btn" onclick="filterPOSTx('refunded',this)">Refunded</button>
+            <button class="pos-tx-filter-btn" onclick="filterPOSTx('failed',this)">Failed</button>
+          </div>
+          <button class="refresh-btn" onclick="loadPOSTransactions()">↺ Refresh</button>
+        </div>
+
+        <div class="pos-status" id="pos-tx-status"></div>
+        <div class="pos-tx-list" id="pos-tx-list">
+          <div class="empty-state">Loading transactions…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!-- end POS modal -->
+
   <script src="auth-guard.js"></script>
   <script src="staff.js"></script>
   <script>
     guardPage(['manager']).then(ok => { if (ok) initDashboard('manager'); });
+
+    // ════════════════════════════════════════════
+    //  POS CONNECTOR — Manager UI Logic
+    // ════════════════════════════════════════════
+
+    const POS_API = 'https://real-restaurant-api-production.up.railway.app/api/pos';
+
+    let _posProvider  = 'square';
+    let _posOrderData = null;   // fetched order object
+    let _posTxFilter  = 'all';
+
+    // ── Auth header helper ────────────────────
+    function posAuthHeaders() {
+      const token = localStorage.getItem('staff_token') || localStorage.getItem('rr_token') || '';
+      return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+    }
+
+    // ── Open / Close ─────────────────────────
+    function openPOS(tab = 'checkout') {
+      document.getElementById('pos-overlay').classList.add('open');
+      switchPOSTab(tab, document.querySelector(`.pos-tab:nth-child(${tab === 'transactions' ? 2 : 1})`));
+      if (tab === 'transactions') loadPOSTransactions();
+    }
+
+    function closePOS() {
+      document.getElementById('pos-overlay').classList.remove('open');
+      closeReceipt();
+    }
+
+    function closePOSOnOverlay(e) {
+      if (e.target === document.getElementById('pos-overlay')) closePOS();
+    }
+
+    // ── Tabs ─────────────────────────────────
+    function switchPOSTab(tab, btn) {
+      document.querySelectorAll('.pos-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.pos-panel').forEach(p => p.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      document.getElementById(`pos-panel-${tab}`).classList.add('active');
+      if (tab === 'transactions') loadPOSTransactions();
+    }
+
+    // ── Provider selector ────────────────────
+    function selectProvider(name, btn) {
+      _posProvider = name;
+      document.querySelectorAll('.pos-provider-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      // Show/hide provider-specific fields
+      ['square','toast','sumup'].forEach(p => {
+        const el = document.getElementById(`pos-fields-${p}`);
+        if (el) el.style.display = p === name ? '' : 'none';
+      });
+    }
+
+    // ── Order lookup ─────────────────────────
+    let _lookupTimer = null;
+    async function lookupOrderForPOS(val) {
+      clearTimeout(_lookupTimer);
+      const summaryEl  = document.getElementById('pos-order-summary');
+      const amountField = document.getElementById('pos-amount-field');
+      if (!val || isNaN(val)) {
+        summaryEl.style.display = 'none';
+        amountField.style.display = '';
+        _posOrderData = null;
+        return;
+      }
+      _lookupTimer = setTimeout(async () => {
+        try {
+          const token = localStorage.getItem('staff_token') || localStorage.getItem('rr_token') || '';
+          const res = await fetch(
+            `https://real-restaurant-api-production.up.railway.app/api/staff/orders/${val}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (!res.ok) throw new Error('Order not found');
+          const order = await res.json();
+          _posOrderData = order;
+
+          // Render order summary
+          const items = (order.items || []).map(i =>
+            `<div class="pos-os-row"><span>${i.name}</span><span>Ksh ${i.price.toLocaleString()}</span></div>`
+          ).join('');
+          document.getElementById('pos-os-items').innerHTML = items;
+          document.getElementById('pos-os-total').textContent =
+            `Ksh ${order.total.toLocaleString()}`;
+          summaryEl.style.display = '';
+          amountField.style.display = 'none';
+        } catch (e) {
+          _posOrderData = null;
+          summaryEl.style.display = 'none';
+          amountField.style.display = '';
+        }
+      }, 500);
+    }
+
+    // ── Submit checkout ───────────────────────
+    async function submitPOSCheckout() {
+      const btn = document.getElementById('pos-submit-btn');
+      const statusEl = document.getElementById('pos-checkout-status');
+      const currency = document.getElementById('pos-currency').value;
+      const tipRaw   = parseFloat(document.getElementById('pos-tip').value) || 0;
+      const tipCents = Math.round(tipRaw * 100);
+      const orderId  = document.getElementById('pos-order-id').value;
+
+      // Determine amount
+      let amountCents;
+      if (_posOrderData) {
+        amountCents = _posOrderData.total; // already in KES (integer from DB)
+      } else {
+        const raw = parseFloat(document.getElementById('pos-amount').value);
+        if (!raw || raw <= 0) {
+          return showPOSStatus('checkout', 'Enter a valid amount', 'error');
+        }
+        amountCents = Math.round(raw * 100);
+      }
+
+      // Build payload
+      const payload = {
+        provider: _posProvider,
+        currency,
+        tip_cents: tipCents,
+      };
+      if (orderId) payload.order_id = parseInt(orderId);
+      if (!_posOrderData) payload.amount_cents = amountCents;
+
+      if (_posProvider === 'square') {
+        const nonce = document.getElementById('pos-square-nonce').value.trim();
+        if (!nonce) return showPOSStatus('checkout', 'Square card nonce is required', 'error');
+        payload.source_id = nonce;
+      } else if (_posProvider === 'toast') {
+        payload.payment_type = document.getElementById('pos-toast-type').value;
+        const tok = document.getElementById('pos-toast-token').value.trim();
+        if (tok) payload.card_token = tok;
+      } else if (_posProvider === 'sumup') {
+        const tok = document.getElementById('pos-sumup-token').value.trim();
+        if (!tok) return showPOSStatus('checkout', 'SumUp card token is required', 'error');
+        payload.card_token = tok;
+        payload.checkout_reference = `order-${orderId || Date.now()}`;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Processing…';
+      showPOSStatus('checkout', '', '');
+
+      try {
+        const res = await fetch(`${POS_API}/checkout`, {
+          method: 'POST',
+          headers: posAuthHeaders(),
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Payment failed');
+
+        // Update KPI
+        refreshPOSKPI();
+
+        // Show receipt
+        showReceipt(data.transaction, _posOrderData);
+        resetCheckoutForm();
+
+      } catch (err) {
+        showPOSStatus('checkout', `⚠️ ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💳 Process Payment';
+      }
+    }
+
+    function showPOSStatus(panel, msg, type) {
+      const el = document.getElementById(`pos-${panel}-status`);
+      if (!el) return;
+      el.textContent = msg;
+      el.className = `pos-status ${type} ${msg ? 'visible' : ''}`;
+    }
+
+    function resetCheckoutForm() {
+      document.getElementById('pos-order-id').value = '';
+      document.getElementById('pos-amount').value = '';
+      document.getElementById('pos-tip').value = '0';
+      document.getElementById('pos-square-nonce').value = '';
+      document.getElementById('pos-toast-token').value = '';
+      document.getElementById('pos-sumup-token').value = '';
+      document.getElementById('pos-order-summary').style.display = 'none';
+      document.getElementById('pos-amount-field').style.display = '';
+      _posOrderData = null;
+    }
+
+    // ── Receipt display ───────────────────────
+    function showReceipt(tx, order) {
+      const items = order
+        ? (order.items || []).map(i =>
+            `<div class="receipt-row"><span>${i.name}</span><span>${tx.currency} ${(i.price).toLocaleString()}</span></div>`
+          ).join('')
+        : '';
+
+      const tipLine = tx.tip_cents > 0
+        ? `<div class="receipt-row"><span>Tip</span><span>${tx.currency} ${(tx.tip_cents / 100).toLocaleString()}</span></div>`
+        : '';
+
+      document.getElementById('receipt-body').innerHTML = `
+        <div class="receipt-row bold"><span>Receipt #</span><span>${tx.receipt_number}</span></div>
+        <div class="receipt-row"><span>Provider</span><span style="text-transform:capitalize">${tx.provider}</span></div>
+        <div class="receipt-row"><span>Status</span><span style="color:${tx.status==='paid'?'#1a7a3a':'#c0392b'};font-weight:700;">${tx.status.toUpperCase()}</span></div>
+        <div class="receipt-row"><span>Date</span><span>${new Date().toLocaleString('en-KE')}</span></div>
+        <hr class="receipt-divider" />
+        ${items}
+        ${tipLine}
+        <div class="receipt-row total"><span>Total Charged</span><span>${tx.currency} ${(tx.amount_cents / 100).toLocaleString()}</span></div>
+        ${tx.provider_tx_id ? `<div class="receipt-row" style="font-size:.72rem;color:var(--text-muted);"><span>Tx ID</span><span>${tx.provider_tx_id}</span></div>` : ''}
+      `;
+      document.getElementById('pos-receipt').classList.add('open');
+    }
+
+    function closeReceipt() {
+      document.getElementById('pos-receipt').classList.remove('open');
+    }
+
+    // ── Transactions ──────────────────────────
+    async function loadPOSTransactions(filter = _posTxFilter) {
+      _posTxFilter = filter;
+      const listEl   = document.getElementById('pos-tx-list');
+      const statusEl = document.getElementById('pos-tx-status');
+      listEl.innerHTML = '<div class="empty-state">Loading…</div>';
+      showPOSStatus('tx', '', '');
+
+      try {
+        const url = filter === 'all'
+          ? `${POS_API}/transactions?limit=50`
+          : `${POS_API}/transactions?status=${filter}&limit=50`;
+        const res  = await fetch(url, { headers: posAuthHeaders() });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load');
+
+        if (!data.transactions || data.transactions.length === 0) {
+          listEl.innerHTML = '<div class="empty-state">No transactions found</div>';
+          return;
+        }
+        listEl.innerHTML = data.transactions.map(renderPOSTxCard).join('');
+        refreshPOSKPI(data.transactions);
+      } catch (err) {
+        listEl.innerHTML = '<div class="empty-state">⚠️ Could not load transactions</div>';
+        showPOSStatus('tx', err.message, 'error');
+      }
+    }
+
+    function filterPOSTx(filter, btn) {
+      document.querySelectorAll('.pos-tx-filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      loadPOSTransactions(filter);
+    }
+
+    function renderPOSTxCard(tx) {
+      const statusColors = {
+        paid: '#1a7a3a', pending: '#c07800', failed: '#c0392b', refunded: '#2258a5'
+      };
+      const color = statusColors[tx.status] || '#6a5a4a';
+      const refundBtn = tx.status === 'paid'
+        ? `<button class="pos-tx-refund-btn" onclick="refundPOSTx(${tx.id})">↩ Refund</button>`
+        : '';
+      const receiptBtn = tx.status === 'paid'
+        ? `<button class="pos-tx-refund-btn" style="border-color:var(--green);color:var(--green);" onclick="viewPOSReceipt(${tx.id})">🧾 Receipt</button>`
+        : '';
+      return `
+        <div class="pos-tx-card" id="pos-tx-${tx.id}">
+          <div class="pos-tx-top">
+            <span class="pos-tx-id">${tx.receipt_number}</span>
+            <span class="pos-tx-provider ${tx.provider}">${tx.provider}</span>
+          </div>
+          <div class="pos-tx-meta">
+            <span>Order #${tx.order_id || '—'}</span>
+            <span>${new Date(tx.created_at + 'Z').toLocaleString('en-KE')}</span>
+            <span style="color:${color};font-weight:700;">${tx.status.toUpperCase()}</span>
+          </div>
+          <div class="pos-tx-amount">${tx.currency} ${(tx.amount_cents / 100).toLocaleString()}</div>
+          <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+            ${receiptBtn}
+            ${refundBtn}
+          </div>
+        </div>`;
+    }
+
+    // ── Refund ────────────────────────────────
+    async function refundPOSTx(txId) {
+      if (!confirm(`Refund transaction #${txId}? This cannot be undone.`)) return;
+      try {
+        const res = await fetch(`${POS_API}/transactions/${txId}/refund`, {
+          method: 'POST',
+          headers: posAuthHeaders(),
+          body: JSON.stringify({}),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Refund failed');
+        showPOSStatus('tx', `✅ Refund processed — ${data.transaction.receipt_number}`, 'success');
+        loadPOSTransactions();
+        if (typeof toast === 'function') toast('💳 Refund processed successfully', 'success');
+      } catch (err) {
+        showPOSStatus('tx', `⚠️ ${err.message}`, 'error');
+      }
+    }
+
+    // ── View single receipt from transactions tab ─
+    async function viewPOSReceipt(txId) {
+      try {
+        const res  = await fetch(`${POS_API}/transactions/${txId}`, { headers: posAuthHeaders() });
+        const tx   = await res.json();
+        if (!res.ok) throw new Error(tx.error || 'Not found');
+        showReceipt(tx, null);
+      } catch (err) {
+        showPOSStatus('tx', `⚠️ ${err.message}`, 'error');
+      }
+    }
+
+    // ── KPI updater ───────────────────────────
+    async function refreshPOSKPI(txList) {
+      try {
+        if (!txList) {
+          const res  = await fetch(`${POS_API}/transactions?status=paid&limit=200`, { headers: posAuthHeaders() });
+          const data = await res.json();
+          txList = data.transactions || [];
+        }
+        const paid = txList.filter(t => t.status === 'paid');
+        const total = paid.reduce((sum, t) => sum + t.amount_cents, 0);
+        const el = document.getElementById('kpi-pos-revenue');
+        if (el) el.textContent = `Ksh ${(total / 100).toLocaleString()}`;
+      } catch (_) {}
+    }
+
+    // ── Socket: listen for POS events ────────
+    // Called after staff.js initialises the socket
+    document.addEventListener('pos:socket:ready', (e) => {
+      const s = e.detail;
+      s.on('pos:payment', (tx) => {
+        if (typeof toast === 'function') toast(`💳 Payment received — ${tx.receipt_number}`, 'success');
+        refreshPOSKPI();
+        // If transactions panel is open, refresh it
+        if (document.getElementById('pos-panel-transactions').classList.contains('active')) {
+          loadPOSTransactions();
+        }
+      });
+      s.on('pos:refund', (tx) => {
+        if (typeof toast === 'function') toast(`↩ Refund: ${tx.receipt_number}`, 'info');
+        refreshPOSKPI();
+      });
+    });
+
+    // Kick off KPI on load
+    window.addEventListener('load', () => {
+      setTimeout(refreshPOSKPI, 1500);
+    });
+
+    // Keyboard shortcut: Esc closes POS modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePOS();
+    });
   </script>
 </body>
 </html>
