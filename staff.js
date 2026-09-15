@@ -972,87 +972,82 @@ window.refreshAll = () => {
 };
 
 
+
 // ════════════════════════════════════════════
-// POS PAYMENT
+// M-PESA PAYMENT
 // ════════════════════════════════════════════
 
-const POS_API = 'https://real-restaurant-api-production.up.railway.app/api/pos';
+const MPESA_API = 'https://real-restaurant-api-production.up.railway.app/api/mpesa';
 
-// ── Inject POS + Receipt styles ──────────────────────────────────────────────
-(function injectPOSStyles() {
-  if (document.getElementById('pos-styles')) return;
+// ── Inject M-Pesa modal + receipt styles ─────────────────────────────────────
+(function injectMpesaStyles() {
+  if (document.getElementById('mpesa-styles')) return;
   const s = document.createElement('style');
-  s.id = 'pos-styles';
+  s.id = 'mpesa-styles';
   s.textContent = `
-    #pos-overlay {
+    /* ── Payment modal ── */
+    #mpesa-overlay {
       position: fixed; inset: 0; z-index: 9500;
       background: rgba(15,35,24,.75);
       backdrop-filter: blur(4px);
       display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none;
-      transition: opacity .3s;
+      opacity: 0; pointer-events: none; transition: opacity .3s;
     }
-    #pos-overlay.show { opacity: 1; pointer-events: all; }
-    #pos-modal {
+    #mpesa-overlay.show { opacity: 1; pointer-events: all; }
+    #mpesa-modal {
       background: #faf6ee;
-      border: 2px solid #c9a84c;
-      border-radius: 16px;
+      border: 2px solid #c9a84c; border-radius: 16px;
       box-shadow: 0 32px 80px rgba(0,0,0,.5);
-      width: 100%; max-width: 460px;
+      width: 100%; max-width: 440px;
       margin: 1rem; padding: 2rem;
-      transform: translateY(20px) scale(.97);
-      transition: transform .3s;
+      transform: translateY(20px) scale(.97); transition: transform .3s;
       max-height: 90vh; overflow-y: auto;
     }
-    #pos-overlay.show #pos-modal { transform: translateY(0) scale(1); }
-    .pos-header {
+    #mpesa-overlay.show #mpesa-modal { transform: translateY(0) scale(1); }
+
+    .mpesa-header {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 1.2rem;
     }
-    .pos-title {
-      font-family: 'Cinzel', serif;
-      font-size: 1rem; letter-spacing: .2em;
-      color: #0f2318; text-transform: uppercase;
+    .mpesa-title {
+      font-family: 'Cinzel', serif; font-size: 1rem;
+      letter-spacing: .2em; color: #0f2318; text-transform: uppercase;
     }
-    .pos-close-btn {
+    .mpesa-close-btn {
       background: none; border: none; font-size: 1.3rem;
       cursor: pointer; color: #6a5a4a; line-height: 1;
     }
-    .pos-order-summary {
-      background: rgba(15,35,24,.06);
-      border-radius: 10px; padding: .8rem 1rem;
-      margin-bottom: 1.2rem; font-size: .82rem; color: #6a5a4a;
+    .mpesa-logo {
+      text-align: center; margin-bottom: 1.2rem;
     }
-    .pos-order-summary strong { color: #0f2318; display: block; margin-bottom: .3rem; }
-    .pos-order-summary .pos-total {
-      font-size: 1.1rem; font-weight: 700; color: #0f2318; margin-top: .4rem;
+    .mpesa-logo-badge {
+      display: inline-block;
+      background: #00a651; color: #fff;
+      font-weight: 900; font-size: 1.1rem;
+      letter-spacing: .05em; padding: .35rem 1.2rem;
+      border-radius: 6px;
     }
-    .pos-providers { display: flex; gap: .6rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
-    .pos-provider-btn {
-      flex: 1; min-width: 90px;
-      padding: .55rem .5rem;
-      border: 1.5px solid #e0d8c8; border-radius: 8px;
-      background: #fff; cursor: pointer;
-      font-size: .78rem; font-weight: 700;
-      letter-spacing: .08em; text-transform: uppercase;
-      color: #6a5a4a; transition: all .2s; text-align: center;
+    .mpesa-order-summary {
+      background: rgba(15,35,24,.06); border-radius: 10px;
+      padding: .8rem 1rem; margin-bottom: 1.2rem;
+      font-size: .82rem; color: #6a5a4a;
     }
-    .pos-provider-btn:hover { border-color: #c9a84c; color: #0f2318; }
-    .pos-provider-btn.active { border-color: #c9a84c; background: #fffdf5; color: #0f2318; }
-    .pos-provider-btn .pos-provider-icon { font-size: 1.3rem; display: block; margin-bottom: .2rem; }
-    .pos-field { margin-bottom: .9rem; }
-    .pos-field label {
+    .mpesa-order-summary strong { color: #0f2318; display: block; margin-bottom: .3rem; }
+    .mpesa-total { font-size: 1.1rem; font-weight: 700; color: #0f2318; margin-top: .4rem; }
+    .mpesa-field { margin-bottom: .9rem; }
+    .mpesa-field label {
       font-size: .72rem; font-weight: 700;
       letter-spacing: .1em; text-transform: uppercase;
       color: #6a5a4a; display: block; margin-bottom: .3rem;
     }
-    .pos-field input, .pos-field select {
-      width: 100%; padding: .65rem .9rem;
+    .mpesa-field input {
+      width: 100%; padding: .7rem 1rem;
       border: 1.5px solid #e0d8c8; border-radius: 6px;
-      font-family: 'Lato', sans-serif; font-size: .88rem;
+      font-family: 'Lato', sans-serif; font-size: .95rem;
       background: #fff; color: #1a1a1a; transition: border-color .2s;
     }
-    .pos-field input:focus, .pos-field select:focus { outline: none; border-color: #c9a84c; }
+    .mpesa-field input:focus { outline: none; border-color: #00a651; }
+    .mpesa-hint { font-size: .72rem; color: #6a5a4a; margin-top: .25rem; }
     .tip-options { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .4rem; }
     .tip-btn {
       padding: .35rem .8rem; border-radius: 20px;
@@ -1060,56 +1055,69 @@ const POS_API = 'https://real-restaurant-api-production.up.railway.app/api/pos';
       font-size: .75rem; font-weight: 700; cursor: pointer;
       color: #6a5a4a; transition: all .2s;
     }
-    .tip-btn:hover { border-color: #c9a84c; }
-    .tip-btn.active { background: #0f2318; color: #c9a84c; border-color: #0f2318; }
-    .pos-cash-note {
-      background: rgba(201,168,76,.1);
-      border: 1px solid rgba(201,168,76,.4);
-      border-radius: 8px; padding: .75rem 1rem;
-      font-size: .82rem; color: #7d6010; margin-bottom: .9rem;
-    }
-    .pos-submit-btn {
-      width: 100%; padding: .85rem;
-      background: #0f2318; color: #c9a84c;
-      border: 1px solid #c9a84c; border-radius: 8px;
-      font-family: 'Cinzel', serif;
-      font-size: .85rem; font-weight: 700;
-      letter-spacing: .15em; text-transform: uppercase;
+    .tip-btn:hover { border-color: #00a651; }
+    .tip-btn.active { background: #00a651; color: #fff; border-color: #00a651; }
+    .mpesa-submit-btn {
+      width: 100%; padding: .9rem;
+      background: #00a651; color: #fff;
+      border: none; border-radius: 8px;
+      font-family: 'Cinzel', serif; font-size: .9rem;
+      font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
       cursor: pointer; transition: background .2s; margin-top: .5rem;
     }
-    .pos-submit-btn:hover { background: #1a3a2a; }
-    .pos-submit-btn:disabled { opacity: .5; cursor: not-allowed; }
-    .pos-error { font-size: .8rem; color: #c0392b; margin-top: .5rem; min-height: 1.2rem; }
+    .mpesa-submit-btn:hover { background: #008c45; }
+    .mpesa-submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .mpesa-error { font-size: .8rem; color: #c0392b; margin-top: .5rem; min-height: 1.2rem; }
 
-    /* Receipt */
+    /* ── Waiting screen (after STK push sent) ── */
+    #mpesa-waiting {
+      display: none; text-align: center; padding: .5rem 0;
+    }
+    #mpesa-waiting.show { display: block; }
+    .mpesa-spinner {
+      font-size: 3rem; display: block;
+      animation: mpesaSpin 1s linear infinite;
+    }
+    @keyframes mpesaSpin {
+      from { transform: rotate(0deg); } to { transform: rotate(360deg); }
+    }
+    .mpesa-waiting-title {
+      font-family: 'Cinzel', serif; font-size: .95rem;
+      letter-spacing: .15em; color: #0f2318; margin: .8rem 0 .4rem;
+    }
+    .mpesa-waiting-desc { font-size: .82rem; color: #6a5a4a; line-height: 1.6; }
+    .mpesa-cancel-btn {
+      margin-top: 1.2rem; padding: .55rem 1.8rem;
+      background: transparent; color: #c0392b;
+      border: 1px solid #c0392b; border-radius: 6px;
+      font-size: .78rem; font-weight: 700; cursor: pointer;
+    }
+
+    /* ── Receipt modal ── */
     #receipt-overlay {
       position: fixed; inset: 0; z-index: 9600;
-      background: rgba(15,35,24,.8);
-      backdrop-filter: blur(4px);
+      background: rgba(15,35,24,.8); backdrop-filter: blur(4px);
       display: flex; align-items: center; justify-content: center;
       opacity: 0; pointer-events: none; transition: opacity .3s;
     }
     #receipt-overlay.show { opacity: 1; pointer-events: all; }
     #receipt-modal {
-      background: #fff;
-      border: 2px solid #c9a84c; border-radius: 16px;
+      background: #fff; border: 2px solid #00a651; border-radius: 16px;
       box-shadow: 0 32px 80px rgba(0,0,0,.5);
       width: 100%; max-width: 380px;
       margin: 1rem; padding: 2rem;
-      transform: translateY(20px) scale(.97);
-      transition: transform .3s; text-align: center;
+      transform: translateY(20px) scale(.97); transition: transform .3s;
+      text-align: center;
     }
     #receipt-overlay.show #receipt-modal { transform: translateY(0) scale(1); }
     .receipt-icon { font-size: 3rem; margin-bottom: .5rem; }
     .receipt-title {
       font-family: 'Cinzel', serif; font-size: 1rem;
-      letter-spacing: .2em; color: #0f2318;
-      text-transform: uppercase; margin-bottom: 1rem;
+      letter-spacing: .2em; color: #0f2318; text-transform: uppercase; margin-bottom: 1rem;
     }
     .receipt-body {
-      background: #f8f8f8; border-radius: 10px;
-      padding: 1rem; text-align: left;
-      font-size: .82rem; color: #333;
+      background: #f8f8f8; border-radius: 10px; padding: 1rem;
+      text-align: left; font-size: .82rem; color: #333;
       margin-bottom: 1.2rem; line-height: 1.8;
     }
     .receipt-row { display: flex; justify-content: space-between; }
@@ -1120,252 +1128,224 @@ const POS_API = 'https://real-restaurant-api-production.up.railway.app/api/pos';
     .receipt-number { font-size: .72rem; color: #999; letter-spacing: .08em; margin-bottom: 1rem; }
     .receipt-close-btn {
       width: 100%; padding: .75rem;
-      background: #0f2318; color: #c9a84c;
-      border: 1px solid #c9a84c; border-radius: 8px;
-      font-size: .8rem; font-weight: 700;
-      letter-spacing: .12em; text-transform: uppercase;
-      cursor: pointer; transition: background .2s;
+      background: #00a651; color: #fff; border: none; border-radius: 8px;
+      font-size: .8rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; cursor: pointer; transition: background .2s;
     }
-    .receipt-close-btn:hover { background: #1a3a2a; }
+    .receipt-close-btn:hover { background: #008c45; }
 
-    /* Charge button on order cards */
+    /* ── Charge button on delivered order cards ── */
     .pos-charge-btn {
-      background: #c9a84c; color: #0f2318;
-      border: none; border-radius: 6px;
-      padding: .45rem 1rem;
-      font-size: .78rem; font-weight: 700;
+      background: #00a651; color: #fff; border: none; border-radius: 6px;
+      padding: .45rem 1rem; font-size: .78rem; font-weight: 700;
       letter-spacing: .08em; text-transform: uppercase;
       cursor: pointer; transition: background .2s; margin-top: .4rem;
     }
-    .pos-charge-btn:hover { background: #e8cc7a; }
-    .pos-charge-btn.charged { background: #27ae60; color: #fff; cursor: default; }
+    .pos-charge-btn:hover { background: #008c45; }
+    .pos-charge-btn.charged { background: #27ae60; cursor: default; }
   `;
   document.head.appendChild(s);
 })();
 
-// ── POS State ────────────────────────────────────────────────────────────────
-let _posOrder = null;
-let _posProvider = 'sumup';
-let _posTipCents = 0;
-let _posAvailableProviders = [];
+// ── M-Pesa state ─────────────────────────────────────────────────────────────
+let _mpesaOrder           = null;
+let _mpesaTipKes          = 0;
+let _mpesaCheckoutReqId   = null;
+let _mpesaPollInterval    = null;
 
-async function fetchPOSProviders() {
-  try {
-    const res = await fetch(`${POS_API}/providers`);
-    if (!res.ok) return;
-    const data = await res.json();
-    _posAvailableProviders = data.providers || [];
-  } catch (_) {
-    _posAvailableProviders = ['square', 'toast', 'sumup'];
-  }
-}
+// ── Open M-Pesa payment modal ─────────────────────────────────────────────────
+function openPOSModal(order) {
+  _mpesaOrder        = order;
+  _mpesaTipKes       = 0;
+  _mpesaCheckoutReqId = null;
 
-// ── Open POS modal ────────────────────────────────────────────────────────────
-async function openPOSModal(order) {
-  _posOrder = order;
-  _posTipCents = 0;
-
-  if (_posAvailableProviders.length === 0) await fetchPOSProviders();
-
-  let overlay = document.getElementById('pos-overlay');
+  let overlay = document.getElementById('mpesa-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
-    overlay.id = 'pos-overlay';
+    overlay.id = 'mpesa-overlay';
     overlay.innerHTML = `
-      <div id="pos-modal">
-        <div class="pos-header">
-          <span class="pos-title">💳 Take Payment</span>
-          <button class="pos-close-btn" onclick="closePOSModal()">✕</button>
+      <div id="mpesa-modal">
+        <div class="mpesa-header">
+          <span class="mpesa-title">📱 M-Pesa Payment</span>
+          <button class="mpesa-close-btn" onclick="closePOSModal()">✕</button>
         </div>
-        <div class="pos-order-summary" id="pos-order-summary"></div>
-        <div class="pos-field">
-          <label>Payment Provider</label>
-          <div class="pos-providers" id="pos-providers"></div>
-        </div>
-        <div id="pos-payment-fields"></div>
-        <div class="pos-field">
-          <label>Add Tip</label>
-          <div class="tip-options">
-            <button class="tip-btn active" onclick="selectTip(0,this)">No Tip</button>
-            <button class="tip-btn" onclick="selectTip(5,this)">5%</button>
-            <button class="tip-btn" onclick="selectTip(10,this)">10%</button>
-            <button class="tip-btn" onclick="selectTip(15,this)">15%</button>
-            <button class="tip-btn" onclick="selectTip(20,this)">20%</button>
+        <div class="mpesa-logo"><span class="mpesa-logo-badge">M-PESA</span></div>
+        <div class="mpesa-order-summary" id="mpesa-order-summary"></div>
+
+        <!-- Input form -->
+        <div id="mpesa-form">
+          <div class="mpesa-field">
+            <label>Customer Phone Number</label>
+            <input type="tel" id="mpesa-phone" placeholder="07XXXXXXXX" maxlength="13" />
+            <div class="mpesa-hint">Format: 07XXXXXXXX or 254XXXXXXXXX</div>
           </div>
+          <div class="mpesa-field">
+            <label>Add Tip</label>
+            <div class="tip-options">
+              <button class="tip-btn active" onclick="selectTip(0,this)">No Tip</button>
+              <button class="tip-btn" onclick="selectTip(5,this)">5%</button>
+              <button class="tip-btn" onclick="selectTip(10,this)">10%</button>
+              <button class="tip-btn" onclick="selectTip(15,this)">15%</button>
+              <button class="tip-btn" onclick="selectTip(20,this)">20%</button>
+            </div>
+          </div>
+          <button class="mpesa-submit-btn" id="mpesa-submit-btn" onclick="submitMpesaPayment()">
+            📲 Send STK Push
+          </button>
+          <div class="mpesa-error" id="mpesa-error"></div>
         </div>
-        <button class="pos-submit-btn" id="pos-submit-btn" onclick="submitPOSPayment()">
-          Process Payment
-        </button>
-        <div class="pos-error" id="pos-error"></div>
+
+        <!-- Waiting screen -->
+        <div id="mpesa-waiting">
+          <span class="mpesa-spinner">⏳</span>
+          <div class="mpesa-waiting-title">Waiting for Payment…</div>
+          <div class="mpesa-waiting-desc">
+            A prompt has been sent to the customer's phone.<br/>
+            Ask them to enter their M-Pesa PIN to confirm.
+          </div>
+          <button class="mpesa-cancel-btn" onclick="cancelMpesaWait()">Cancel</button>
+        </div>
       </div>`;
     document.body.appendChild(overlay);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) closePOSModal(); });
   }
 
+  // Reset to form view
+  document.getElementById('mpesa-form').style.display    = 'block';
+  document.getElementById('mpesa-waiting').classList.remove('show');
+  document.getElementById('mpesa-error').textContent     = '';
+  document.getElementById('mpesa-phone').value           = '';
+
   // Fill order summary
   const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]');
-  document.getElementById('pos-order-summary').innerHTML = `
+  document.getElementById('mpesa-order-summary').innerHTML = `
     <strong>Order #${order.id}${order.note ? ` — ${order.note}` : ''}</strong>
     ${items.map(i => `<div class="receipt-row"><span>${i.name}</span><span>Ksh ${i.price.toLocaleString()}</span></div>`).join('')}
-    <div class="pos-total">Total: Ksh ${order.total.toLocaleString()}</div>`;
+    <div class="mpesa-total" id="mpesa-total-display">Total: Ksh ${order.total.toLocaleString()}</div>`;
 
-  // Render provider buttons
-  const providers = _posAvailableProviders.length > 0 ? _posAvailableProviders : ['square', 'toast', 'sumup'];
-  const providerIcons = { square: '⬛', toast: '🍞', sumup: '💳' };
-  _posProvider = providers[0] || 'sumup';
-
-  document.getElementById('pos-providers').innerHTML = providers.map(p => `
-    <button class="pos-provider-btn${p === _posProvider ? ' active' : ''}"
-            onclick="selectPOSProvider('${p}',this)">
-      <span class="pos-provider-icon">${providerIcons[p] || '💳'}</span>
-      ${p.charAt(0).toUpperCase() + p.slice(1)}
-    </button>`).join('');
-
-  renderPOSFields(_posProvider);
-  document.getElementById('pos-error').textContent = '';
   overlay.classList.add('show');
 }
 
-function renderPOSFields(provider) {
-  const container = document.getElementById('pos-payment-fields');
-  if (!container) return;
-
-  if (provider === 'square') {
-    container.innerHTML = `
-      <div class="pos-field">
-        <label>Card Nonce (from Square Web Payments SDK)</label>
-        <input type="text" id="pos-source-id" placeholder="cnon:card-nonce-ok" />
-      </div>
-      <div class="pos-field">
-        <label>Currency</label>
-        <select id="pos-currency"><option value="KES">KES</option><option value="USD">USD</option></select>
-      </div>`;
-  } else if (provider === 'toast') {
-    container.innerHTML = `
-      <div class="pos-field">
-        <label>Payment Type</label>
-        <select id="pos-payment-type" onchange="toggleToastCardField(this.value)">
-          <option value="CASH">Cash</option>
-          <option value="CREDIT_CARD">Credit Card</option>
-        </select>
-      </div>
-      <div class="pos-cash-note" id="pos-cash-note">
-        💵 Cash payment — confirm the customer has paid before submitting.
-      </div>
-      <div id="pos-toast-card-field" style="display:none">
-        <div class="pos-field">
-          <label>Card Token (from Toast SDK)</label>
-          <input type="text" id="pos-card-token" placeholder="toast_card_token" />
-        </div>
-      </div>
-      <div class="pos-field">
-        <label>Currency</label>
-        <select id="pos-currency"><option value="KES">KES</option><option value="USD">USD</option></select>
-      </div>`;
-  } else {
-    // SumUp (default)
-    container.innerHTML = `
-      <div class="pos-field">
-        <label>Card Token (from SumUp.js SDK)</label>
-        <input type="text" id="pos-card-token" placeholder="sup_t_..." />
-      </div>
-      <div class="pos-field">
-        <label>Currency</label>
-        <select id="pos-currency"><option value="KES">KES</option><option value="USD">USD</option></select>
-      </div>`;
-  }
-}
-
-function toggleToastCardField(paymentType) {
-  const cardField = document.getElementById('pos-toast-card-field');
-  const cashNote  = document.getElementById('pos-cash-note');
-  if (cardField) cardField.style.display = paymentType === 'CREDIT_CARD' ? 'block' : 'none';
-  if (cashNote)  cashNote.style.display  = paymentType === 'CASH'        ? 'block' : 'none';
-}
-
-function selectPOSProvider(provider, btn) {
-  _posProvider = provider;
-  document.querySelectorAll('.pos-provider-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderPOSFields(provider);
-  document.getElementById('pos-error').textContent = '';
-}
-
+// ── Tip selector ──────────────────────────────────────────────────────────────
 function selectTip(percent, btn) {
   document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  _posTipCents = Math.round((_posOrder.total * percent) / 100);
+  _mpesaTipKes = Math.round((_mpesaOrder.total * percent) / 100);
+  const total = _mpesaOrder.total + _mpesaTipKes;
+  const el = document.getElementById('mpesa-total-display');
+  if (el) el.textContent = `Total: Ksh ${total.toLocaleString()}${_mpesaTipKes > 0 ? ` (incl. Ksh ${_mpesaTipKes.toLocaleString()} tip)` : ''}`;
 }
 
-async function submitPOSPayment() {
-  const errorEl  = document.getElementById('pos-error');
-  const submitBtn = document.getElementById('pos-submit-btn');
+// ── Submit STK push ───────────────────────────────────────────────────────────
+async function submitMpesaPayment() {
+  const errorEl   = document.getElementById('mpesa-error');
+  const submitBtn = document.getElementById('mpesa-submit-btn');
+  const phone     = document.getElementById('mpesa-phone')?.value?.trim();
+
   errorEl.textContent = '';
+  if (!phone) { errorEl.textContent = '⚠️ Phone number is required.'; return; }
 
-  const currency = document.getElementById('pos-currency')?.value || 'KES';
-  const body = {
-    order_id:  _posOrder.id,
-    provider:  _posProvider,
-    currency,
-    tip_cents: _posTipCents,
-  };
-
-  if (_posProvider === 'square') {
-    const sourceId = document.getElementById('pos-source-id')?.value?.trim();
-    if (!sourceId) { errorEl.textContent = '⚠️ Card nonce (source_id) is required for Square.'; return; }
-    body.source_id = sourceId;
-  } else if (_posProvider === 'toast') {
-    const paymentType = document.getElementById('pos-payment-type')?.value || 'CASH';
-    body.payment_type = paymentType;
-    if (paymentType === 'CREDIT_CARD') {
-      const cardToken = document.getElementById('pos-card-token')?.value?.trim();
-      if (!cardToken) { errorEl.textContent = '⚠️ Card token is required for Toast credit card payments.'; return; }
-      body.card_token = cardToken;
-    }
-  } else {
-    // SumUp
-    const cardToken = document.getElementById('pos-card-token')?.value?.trim();
-    if (!cardToken) { errorEl.textContent = '⚠️ Card token is required for SumUp.'; return; }
-    body.card_token = cardToken;
-  }
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Processing…';
+  submitBtn.disabled    = true;
+  submitBtn.textContent = 'Sending…';
 
   try {
-    const res  = await fetch(`${POS_API}/checkout`, {
+    const res = await fetch(`${MPESA_API}/stkpush`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(body),
+      body:    JSON.stringify({
+        order_id:   _mpesaOrder.id,
+        phone,
+        amount_kes: _mpesaOrder.total + _mpesaTipKes,
+      }),
     });
     const data = await res.json();
 
-    if (!res.ok) { errorEl.textContent = `⚠️ ${data.error || 'Payment failed'}`; return; }
-
-    closePOSModal();
-    showReceipt(data.transaction, _posOrder);
-
-    // Mark charge button as done
-    const chargeBtn = document.querySelector(`.pos-charge-btn[data-order-id="${_posOrder.id}"]`);
-    if (chargeBtn) {
-      chargeBtn.textContent = '✅ Charged';
-      chargeBtn.classList.add('charged');
-      chargeBtn.disabled = true;
+    if (!res.ok) {
+      errorEl.textContent = `⚠️ ${data.error || 'STK push failed'}`;
+      return;
     }
+
+    _mpesaCheckoutReqId = data.checkoutRequestId;
+
+    // Switch to waiting screen
+    document.getElementById('mpesa-form').style.display = 'none';
+    document.getElementById('mpesa-waiting').classList.add('show');
+
+    // Start polling for payment confirmation
+    startMpesaPolling(_mpesaCheckoutReqId);
+
   } catch (err) {
     errorEl.textContent = `⚠️ Network error: ${err.message}`;
   } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Process Payment';
+    submitBtn.disabled    = false;
+    submitBtn.textContent = '📲 Send STK Push';
   }
 }
 
+// ── Poll for payment result ───────────────────────────────────────────────────
+function startMpesaPolling(checkoutRequestId) {
+  let attempts = 0;
+  const maxAttempts = 24; // poll for up to 2 minutes (24 × 5s)
+
+  _mpesaPollInterval = setInterval(async () => {
+    attempts++;
+    try {
+      const res  = await fetch(`${MPESA_API}/status/${checkoutRequestId}`);
+      const data = await res.json();
+      const tx   = data.transaction;
+
+      if (!tx) return;
+
+      if (tx.status === 'paid') {
+        stopMpesaPolling();
+        closePOSModal();
+        showMpesaReceipt(tx, _mpesaOrder);
+        // Mark charge button
+        const btn = document.querySelector(`.pos-charge-btn[data-order-id="${_mpesaOrder.id}"]`);
+        if (btn) { btn.textContent = '✅ Paid'; btn.classList.add('charged'); btn.disabled = true; }
+      } else if (tx.status === 'failed' || tx.status === 'cancelled') {
+        stopMpesaPolling();
+        // Back to form with error
+        document.getElementById('mpesa-waiting').classList.remove('show');
+        document.getElementById('mpesa-form').style.display = 'block';
+        const msg = tx.status === 'cancelled'
+          ? '⚠️ Payment cancelled by customer.'
+          : `⚠️ Payment failed: ${tx.result_desc || 'Unknown error'}`;
+        document.getElementById('mpesa-error').textContent = msg;
+      } else if (attempts >= maxAttempts) {
+        stopMpesaPolling();
+        document.getElementById('mpesa-waiting').classList.remove('show');
+        document.getElementById('mpesa-form').style.display = 'block';
+        document.getElementById('mpesa-error').textContent =
+          '⚠️ Payment timed out. Ask the customer to try again.';
+      }
+    } catch (_) { /* network hiccup — keep polling */ }
+  }, 5000); // every 5 seconds
+}
+
+function stopMpesaPolling() {
+  if (_mpesaPollInterval) {
+    clearInterval(_mpesaPollInterval);
+    _mpesaPollInterval = null;
+  }
+}
+
+function cancelMpesaWait() {
+  stopMpesaPolling();
+  document.getElementById('mpesa-waiting').classList.remove('show');
+  document.getElementById('mpesa-form').style.display = 'block';
+  document.getElementById('mpesa-error').textContent = '';
+}
+
+// ── Close modal ───────────────────────────────────────────────────────────────
 function closePOSModal() {
-  const overlay = document.getElementById('pos-overlay');
+  stopMpesaPolling();
+  const overlay = document.getElementById('mpesa-overlay');
   if (overlay) overlay.classList.remove('show');
 }
 
-function showReceipt(transaction, order) {
+// ── Show M-Pesa receipt ───────────────────────────────────────────────────────
+function showMpesaReceipt(tx, order) {
   let overlay = document.getElementById('receipt-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
@@ -1373,18 +1353,20 @@ function showReceipt(transaction, order) {
     overlay.innerHTML = `
       <div id="receipt-modal">
         <div class="receipt-icon">🧾</div>
-        <div class="receipt-title">Payment Successful</div>
+        <div class="receipt-title">M-Pesa Payment Confirmed</div>
         <div class="receipt-number" id="receipt-number"></div>
-        <div class="receipt-body" id="receipt-body"></div>
+        <div class="receipt-body"  id="receipt-body"></div>
         <button class="receipt-close-btn" onclick="closeReceipt()">Done — Close Receipt</button>
       </div>`;
     document.body.appendChild(overlay);
   }
 
-  const items     = Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]');
-  const tipCents  = transaction.tip_cents || 0;
+  const items  = Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]');
+  const tipKes = tx.amount_kes - order.total;
 
-  document.getElementById('receipt-number').textContent = `Receipt: ${transaction.receipt_number}`;
+  document.getElementById('receipt-number').textContent =
+    tx.mpesa_receipt ? `M-Pesa Receipt: ${tx.mpesa_receipt}` : `Tx #${tx.id}`;
+
   document.getElementById('receipt-body').innerHTML = `
     <div class="receipt-row">
       <span>Order #${order.id}</span>
@@ -1393,18 +1375,16 @@ function showReceipt(transaction, order) {
     <div style="margin:.4rem 0;border-top:1px dashed #ddd;padding-top:.4rem;">
       ${items.map(i => `<div class="receipt-row"><span>${i.name}</span><span>Ksh ${i.price.toLocaleString()}</span></div>`).join('')}
     </div>
-    ${tipCents > 0 ? `<div class="receipt-row"><span>Tip</span><span>Ksh ${tipCents.toLocaleString()}</span></div>` : ''}
+    ${tipKes > 0 ? `<div class="receipt-row"><span>Tip</span><span>Ksh ${tipKes.toLocaleString()}</span></div>` : ''}
     <div class="receipt-row receipt-total">
-      <span>Total Charged</span>
-      <span>Ksh ${transaction.amount_cents.toLocaleString()}</span>
+      <span>Total Paid</span><span>Ksh ${tx.amount_kes.toLocaleString()}</span>
     </div>
     <div class="receipt-row" style="margin-top:.4rem;font-size:.75rem;color:#999;">
-      <span>Provider</span>
-      <span>${transaction.provider.toUpperCase()} • ${transaction.status.toUpperCase()}</span>
+      <span>Via</span><span>M-PESA • ${tx.phone}</span>
     </div>
-    <div class="receipt-row" style="font-size:.75rem;color:#999;">
-      <span>Tx ID</span><span>${transaction.provider_tx_id || '—'}</span>
-    </div>`;
+    ${tx.mpesa_receipt ? `<div class="receipt-row" style="font-size:.75rem;color:#999;">
+      <span>Receipt No.</span><span>${tx.mpesa_receipt}</span>
+    </div>` : ''}`;
 
   overlay.classList.add('show');
 }
@@ -1414,24 +1394,26 @@ function closeReceipt() {
   if (overlay) overlay.classList.remove('show');
 }
 
-// ── Socket listeners for POS events ─────────────────────────────────────────
+// ── Socket listeners for M-Pesa events ──────────────────────────────────────
 function initPOSSocketListeners() {
   if (!socket) return;
-  socket.on('pos:payment', (tx) => {
-    toast(`💳 Payment received — ${tx.provider.toUpperCase()} • Ksh ${tx.amount_cents.toLocaleString()} (${tx.status})`, 'success');
+
+  socket.on('mpesa:paid', (tx) => {
+    toast(`📱 M-Pesa received — Ksh ${tx.amount_kes.toLocaleString()} • ${tx.mpesa_receipt || tx.phone}`, 'success');
+    // If polling modal is open for this tx, it will catch it on next poll
     if (typeof refreshManager === 'function') refreshManager();
   });
-  socket.on('pos:refund', (tx) => {
-    toast(`↩️ Refund processed — ${tx.provider.toUpperCase()} • Receipt ${tx.receipt_number}`, 'info');
+
+  socket.on('mpesa:failed', (tx) => {
+    toast(`⚠️ M-Pesa ${tx.status} — Order #${tx.order_id} • ${tx.result_desc || ''}`, 'error');
     if (typeof refreshManager === 'function') refreshManager();
   });
 }
 
-// ── Expose globals ───────────────────────────────────────────────────────────
-window.openPOSModal          = openPOSModal;
-window.closePOSModal         = closePOSModal;
-window.selectPOSProvider     = selectPOSProvider;
-window.selectTip             = selectTip;
-window.submitPOSPayment      = submitPOSPayment;
-window.toggleToastCardField  = toggleToastCardField;
-window.closeReceipt          = closeReceipt;
+// ── Expose globals ────────────────────────────────────────────────────────────
+window.openPOSModal       = openPOSModal;
+window.closePOSModal      = closePOSModal;
+window.selectTip          = selectTip;
+window.submitMpesaPayment = submitMpesaPayment;
+window.cancelMpesaWait    = cancelMpesaWait;
+window.closeReceipt       = closeReceipt;

@@ -9,6 +9,7 @@ const bookingsRouter = require('./routes/bookings');
 const authRouter = require('./routes/auth');
 const staffRouter = require('./routes/staff');
 const posRouter = require('./routes/pos');
+const mpesaRouter = require('./routes/mpesa');
 const { authenticate, requireRole } = require('./middleware/auth');
 
 const app = express();
@@ -79,6 +80,9 @@ app.use('/api/pos',
   posRouter
 );
 
+// M-Pesa — callback is public, other routes require auth (handled inside router)
+app.use('/api/mpesa', mpesaRouter);
+
 // ── HEALTH ──
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -100,4 +104,5 @@ server.listen(PORT, () => {
   console.log(`🍽️  REAL Restaurant API → http://localhost:${PORT}`);
   console.log(`⚡  Socket.IO          → ws://localhost:${PORT}`);
   console.log(`💳  POS Connector      → /api/pos (Square · Toast · SumUp)`);
+  console.log(`📱  M-Pesa Daraja      → /api/mpesa (STK Push)`);
 });
